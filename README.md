@@ -1,6 +1,5 @@
 # MAGIC: Multitask, Automated Generation of Intermodal CT Perfusion Maps via Generative Adversarial Networks
-## _Smart Medical Informatics Learning & Evaluation Laboratory_
-### _Department of Biomedical Engineering, University of Florida_
+## _Smart Medical Informatics Learning & Evaluation Laboratory, Dept. of Biomedical Engineering, University of Florida_
 
 MAGIC is a novel, multitask deep network architecture that enables translation from noncontrast-enhanced CT imaging to CT perfusion imaging. This framework enables the contrast-free synthesis of perfusion imaging of the brain, and it is generalizable to other modalities of imaging as well.
 
@@ -122,7 +121,7 @@ Using the outputs of the [test script](src/gpu/pytorch_pix2pix_test.py), we can 
 - [**generate_series.m**](src/eval/generate_series.m): Generates a series of figures containing the 4 CT perfusion modalities of a single slice.
 - [**generate_fake_real_folder.m**](src/eval/generate_fake_real_folder.m): Used to apply a colormapto each perfusion image and save the outputs into a structure in which data is separated by modality and fake/real structure. 
 - [**generate_combined_fig.m**](src/eval/generate_combined_fig.m): Generates a figure comparing the noncontrast-enhanced CT input, the ground truth perfusion output, and the synthesized perfusion output all in one figure for easy visualization. (note: this script is applied ***after*** generating the fake/real folder structure from the generate_series.m script)
-    - ![](https://github.com/lab-smile/MAGIC/blob/main/images/combined_fig_1.png?raw=true)
+![](https://github.com/lab-smile/MAGIC/blob/main/images/combined_fig_1.png?raw=true)
 
 Each of these scripts require a path to a colormap that is applied to the grayscale outputs of the test script to produce the same colorings used in the RAPID protocol. This colormap is provided as part of this repository: [Rapid_Colormap.mat](src/eval/Rapid_Colormap.mat).
 
