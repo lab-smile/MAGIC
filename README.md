@@ -1,6 +1,6 @@
 # MAGIC: Multitask, Automated Generation of Intermodal CT Perfusion Maps via Generative Adversarial Networks
 ## _Smart Medical Informatics Learning & Evaluation Laboratory_
-## _Department of Biomedical Engineering, University of Florida_
+### _Department of Biomedical Engineering, University of Florida_
 
 MAGIC is a novel, multitask deep network architecture that enables translation from noncontrast-enhanced CT imaging to CT perfusion imaging. This framework enables the contrast-free synthesis of perfusion imaging of the brain, and it is generalizable to other modalities of imaging as well.
 
@@ -21,17 +21,17 @@ The generator and discriminator networks can be found in [network.py](src/hpg/ne
 
 ### Generator
 The generator for MAGIC is a novel network architecture that was inspired by the popular _pix2pix_ network architecture, originally proposed an described by [_Isola, 2017_](https://arxiv.org/abs/1611.07004). The network accepts a [3x256x256] noncontrast enhanced CT pseudo-RGB input, where the pseudo-RGB characteristic comes from the slice-stacking method used in preprocessing the data. The first 4 layers of the generator are simple encoding layers, comprised of convolution layers followed by batch normalization and leaky ReLU activation layers. From the fifth layer, the network diverges into 4 unique paths, corresponding to one of the perfusion modalities. A series of transposed convolution layers are then used to upscale the encoded image at each pathway, which produces a final predicted perfusion series output. The generator's architecture is shown in greater detail in the figure below. 
-[](images/generator.png)
+![](https://github.com/lab-smile/MAGIC/blob/main/images/generator.png?raw=true)
 
 ### Discriminator
 The discriminator utilizes a relatively simple _PatchGAN_ framework with a 70x70 pixel field of view. This method is originally proposed and described by [_Isola, 2018_](https://arxiv.org/abs/1611.07004v3). We utilize a binary cross entropy loss on the predicted labels for each synthesized and ground truth perfusion slice that the discriminator creates a prediction for. The discriminator's architecture is shown in the figure below.
-[](images/discriminator.png)
+![](https://github.com/lab-smile/MAGIC/blob/main/images/discriminator.png?raw=true)
 
 ## Sample Dataset
 We provide a small sample training set for evaluation and introduction to this project's code. This can be found in [rapid_set_split_small](src/sample/). Contained in this dataset are two subfolders, for training and testing a model. The [training set](src/sample/train) contains 48 samples, and the [testing set](src/sample/test) contains 10 samples. The original MAGIC model was trained on over 16,000+ individual samples, but this sample set illustrates the program's functionality.
 
 Each data sample has been preprocessed using our [newp2pdataset.m](src/preprocessing/newp2pdataset.m) script to put the grayscale image data in a 1280x256 format. Each sample contains 5 images, each corresponding to a different modality. This is illustrated in the image below. From left to right, the image in each data sample are noncontrast CT, mean transit time (MTT), time-to-peak (TTP), cerebral blood flow (CBF), and cerebral blood volume (CBV). These 5 paired slices are put together in the same image file for the ease of loading data in while training our model. An example of a input sample is shown in the figure below.
-[](images/trainsample1.png)
+![](https://github.com/lab-smile/MAGIC/blob/main/images/trainsample1.png?raw=true)
 
 ## Training Instructions
 ### GPU Server
@@ -122,7 +122,7 @@ Using the outputs of the [test script](src/gpu/pytorch_pix2pix_test.py), we can 
 - [**generate_series.m**](src/eval/generate_series.m): Generates a series of figures containing the 4 CT perfusion modalities of a single slice.
 - [**generate_fake_real_folder.m**](src/eval/generate_fake_real_folder.m): Used to apply a colormapto each perfusion image and save the outputs into a structure in which data is separated by modality and fake/real structure. 
 - [**generate_combined_fig.m**](src/eval/generate_combined_fig.m): Generates a figure comparing the noncontrast-enhanced CT input, the ground truth perfusion output, and the synthesized perfusion output all in one figure for easy visualization. (note: this script is applied ***after*** generating the fake/real folder structure from the generate_series.m script)
-    - [](images/combined_fig_1.png)
+    - ![](https://github.com/lab-smile/MAGIC/blob/main/images/combined_fig_1.png?raw=true)
 
 Each of these scripts require a path to a colormap that is applied to the grayscale outputs of the test script to produce the same colorings used in the RAPID protocol. This colormap is provided as part of this repository: [Rapid_Colormap.mat](src/eval/Rapid_Colormap.mat).
 
