@@ -128,10 +128,8 @@ Each of these scripts require a path to a colormap that is applied to the graysc
 ### Quantitative Metrics
 To generate quantitative evaluation metrics for the outputs of the pytorch_pix2pix_test.py script, we use a [Jupyter Notebook script](src/eval/getmetrics.ipynb) in the eval folder titled [getmetrics.ipynb](src/eval/getmetrics.ipynb). If you have Anaconda installed, then Jupyter should have been installed as part of the installation. Otherwise, you can download Jupyter Notebook separately. Read [here](https://pythonforundergradengineers.com/opening-a-jupyter-notebook-on-windows.html#:~:text=Opening%20a%20Jupyter%20Notebook%20on%20Windows%201%20Anaconda,the%20Windows%20start%20menu.%20...%203%20Anaconda%20Navigator) for more information on opening Jupyter Notebook (.ipynb) files. 
 
-We compute four metrics in our quantitative results evaluation:
-- Peak Signal-to-Noise Ratio (PSNR)
+We compute two metrics in our quantitative results evaluation:
 - Structural Similarity Index Metric (SSIM)
-- Root Mean Squared Error (RMSE)
 - Universal Quality Index (UQI) 
 
 Before running this script, make sure to change the paths associated with the following variables to correctly match the desired input and outputs used in your evaluation:
