@@ -1,15 +1,16 @@
 clear; clc; close all;
 
-folders = {'test_results_710_lr1'};
+folders = {'test_results'};
+
 
 for k = 1:length(folders)
     folder_name = cell2mat(folders(k));
     
     load('Rapid_Colormap.mat'); % contains variable Rapid_U
     addpath(genpath('C:/Users/Garrett/Desktop/Display_PMA_Colormaps/'));
-    datapath_real = 'C:/Users/Garrett/Desktop/new_augmented_data/test/';
-    datapath_fake = fullfile(strcat('C:/Users/Garrett/Desktop/new_augmented_data/', folder_name, '/')); %same inputs as metrics
-    outpath = fullfile(strcat('C:/Users/Garrett/Desktop/new_augmented_data/', folder_name, '_fakereal_combined_v2/'));
+    datapath_real = 'C:\Users\Garrett\Desktop\MAGIC\src\sample\test';
+    datapath_fake = fullfile(strcat('C:\Users\Garrett\Desktop\MAGIC\DEMO_RESULTS\', folder_name, '\')); %same inputs as metrics
+    outpath = fullfile(strcat('C:\Users\Garrett\Desktop\MAGIC\DEMO_RESULTS\', folder_name, '_fakereal_combined_v2\'));
     %no mm loss
     %groundtruth_200
     classA = 'MTT';
