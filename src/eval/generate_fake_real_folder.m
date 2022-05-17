@@ -6,8 +6,8 @@ folders = {'final_results/results_lr1_noS-A_fakereal_updated_filtered'};
 for k = 1:length(folders)
     method = 'none';
     folder_name = cell2mat(folders(k));
-    fake_image_folder = fullfile(strcat('C:/Users/Garrett/Desktop/', ));
-    real_image_folder = fullfile('C:/Users/Garrett/Desktop/data_for_simon/real/');
+    fake_image_folder = fullfile(strcat('C:/Users/Garrett/Desktop/', folder_name));
+    real_image_folder = fullfile('C:/Users/Garrett/Desktop/real/');
     savepath = fullfile(strcat('C:/Users/Garrett/Desktop/', folder_name, '_fakereal/'));
     
     disp(fake_image_folder);
@@ -76,7 +76,7 @@ for k = 1:length(folders)
         fprintf('Done with %s\n',imgname_real);
     end
 end
-disp('all done');
+disp('Completed');
 
 
 function newfilepath = makeSubfolder(savepath,folder_name)
