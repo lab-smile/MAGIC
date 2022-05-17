@@ -1,14 +1,15 @@
 clc; clear; close all;
-folders = {'final_results/results_lr1_noS-A_fakereal_updated_filtered'};
+folders = {'test_results'};
+addpath('../processing/');
 
 %parpool;
 
 for k = 1:length(folders)
     method = 'none';
     folder_name = cell2mat(folders(k));
-    fake_image_folder = fullfile(strcat('C:/Users/Garrett/Desktop/', folder_name));
-    real_image_folder = fullfile('C:/Users/Garrett/Desktop/real/');
-    savepath = fullfile(strcat('C:/Users/Garrett/Desktop/', folder_name, '_fakereal/'));
+    fake_image_folder = fullfile(strcat('C:\Users\Garrett\Desktop\MAGIC\DEMO_RESULTS\', folder_name));
+    real_image_folder = fullfile('C:\Users\Garrett\Desktop\MAGIC\src\sample\test');
+    savepath = fullfile(strcat('C:\Users\Garrett\Desktop\MAGIC\DEMO_RESULTS\', folder_name, '_fakereal/'));
     
     disp(fake_image_folder);
     disp(real_image_folder);
@@ -32,9 +33,8 @@ for k = 1:length(folders)
         img = images(i);
         imgname_fake = img.name;
         if strcmp(imgname_fake(1),'.'), continue; end
-        %imgname_real = strrep(imgname_fake,'_output','');
-        %imgname_real = strrep(imgname_real,'.png','.bmp');
-        imgname_real = imgname_fake;
+        imgname_real = strrep(imgname_fake,'_output','');
+        imgname_real = strrep(imgname_real,'.png','.bmp');
         
             fake_img = imread(fullfile(img.folder,imgname_fake));
             real_img = imread(fullfile(real_img_folder,imgname_real));
