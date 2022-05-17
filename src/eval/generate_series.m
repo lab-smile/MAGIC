@@ -139,6 +139,4 @@ for k = 1:length(folders)
         fprintf('Done with %s\n',savename);
     end
 end
-disp('All done!');
-load handel; sound(y, Fs);
-
+disp('Completed')
