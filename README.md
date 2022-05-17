@@ -17,6 +17,7 @@ The novelties of this framework for the contrast-free synthesis of perfusion ima
 ## Generator & Discriminator Architectures
 
 *Note: The pretrained MAGIC Generator is _not_ publicly available. Any requests to access the pretrained model should be directed to [Garrett Fullerton](mailto:gfullerton@ufl.edu).*
+
 *(Remove this line before publishing the repository) The pretrained model can be downloaded from: https://www.dropbox.com/s/zxxujln4mrhwrr3/MAGIC_Generator_FINAL.pkl?dl=0*
 
 The generator and discriminator networks can be found in [network.py](src/hpg/network.py). 
