@@ -51,4 +51,17 @@ Shuffle then permutes the patients within category 0 and category 1 with differe
 
 ## extract_data.m
 ### Description:
-Extracts all the data from questionaires into a Cell called Data. The data is deshuffled according to the mappings created in "shuffle.m"
+Extracts all the data from questionaires into a Cell called Data. The data is deshuffled according to the mappings created in "shuffle.m". The data is saved to two excel files: "GeneralResults.csv" and "DoctorResults.csv".
+
+### Instructions for reproducing
+#### Reproducing Evaluation
+##### Set the "all_image_path" to path to REU > data > questionnaire. 
+##### Set "output_path" to chosen location. 
+##### Nothing in the import patient data needs to be changed.
+
+#### Reproducing Shuffle
+##### Run Shuffle with input variable set to the output_path from evaluation. Set the output variable to chosen output location.
+
+#### Reproducing Extract Data
+##### Set results1 variable to the doctor's excel responses for trail 1. Set results2 to the doctor's excel responses for trail 2.
+Doctor's responses for trail 1 and trail 2 of evaluation 3 can be found in REU > Evaluation > Evaluation Archives > test3_20patients > evaluation_results. Of note, make sure to not copy over "Rajderkar evaluation_sheet.xlsx", copy "Rajderkar evaluation_sheet - Corrected.xlsx".
