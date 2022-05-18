@@ -65,3 +65,6 @@ Extracts all the data from questionaires into a Cell called Data. The data is de
 #### Reproducing Extract Data
 ##### Set results1 variable to the doctor's excel responses for trail 1. Set results2 to the doctor's excel responses for trail 2.
 Doctor's responses for trail 1 and trail 2 of evaluation 3 can be found in REU > Evaluation > Evaluation Archives > test3_20patients > evaluation_results. Of note, make sure to not copy over "Rajderkar evaluation_sheet.xlsx", copy "Rajderkar evaluation_sheet - Corrected.xlsx".
+
+#### Reproducing Stat tests
+##### Run rgraphs.R with the output of the extract Data in the same folder as rgraphs.R.
