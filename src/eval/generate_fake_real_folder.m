@@ -5,7 +5,7 @@ addpath('../processing/');
 %parpool;
 
 for k = 1:length(folders)
-    method = 'none';
+    method = 'median'; %postprocessing method - median was used to achieve final results
     folder_name = cell2mat(folders(k));
     fake_image_folder = fullfile(strcat('C:\Users\Garrett\Desktop\MAGIC\DEMO_RESULTS\', folder_name));
     real_image_folder = fullfile('C:\Users\Garrett\Desktop\MAGIC\src\sample\test');
