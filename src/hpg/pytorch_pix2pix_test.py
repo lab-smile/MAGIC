@@ -11,8 +11,9 @@ parser.add_argument('--test_subfolder', required=False, default='test',  help=''
 parser.add_argument('--ngf', type=int, default=64)
 parser.add_argument('--input_size', type=int, default=256, help='input size')
 parser.add_argument('--save_root', required=False, default='results', help='results save path')
-parser.add_argument('--scale', required=False, default=0.5, help='scale factor for pitl')
+parser.add_argument('--scale', required=False, default=0.5, help='scale factor for PILO parameter')
 parser.add_argument('--batch_size', required=False, default=16, type=int)
+parser.add_argument('--model_path', help='path to generator PKL file')
 opt = parser.parse_args()
 print(opt)
 
@@ -23,23 +24,17 @@ transform = transforms.Compose([
 ])
 test_loader = util.data_load(opt.dataset, opt.test_subfolder, transform, batch_size=1, shuffle=False)
 
-if not os.path.isdir(opt.dataset + '_results/test_results_lr5e-5'):
-    os.mkdir(opt.dataset + '_results/test_results_lr5e-5')
+if not os.path.isdir(opt.dataset + '_results/test_results'):
+    os.mkdir(opt.dataset + '_results/test_results')
     
 
 G = network.generator(opt.ngf,batch_size=opt.batch_size)
 print(G)
 G.cuda()
-G.load_state_dict(torch.load(opt.dataset + '_results/' + 'new_augmented_data_generator_param_final_lr_5e-5.pkl'))
+G.load_state_dict(torch.load(opt.model_path))
 G.eval()
-"""
-# Scaling PITL
-print('before:')
-print(G.deconv9_1.weight.data)
-print(G.deconv9_2.weight.data)
-print(G.deconv9_3.weight.data)
-print(G.deconv9_4.weight.data)
-#print(G.deconv9_1.bias)
+
+# set scale to 0.5 if no PILO scaling
 scale = float(opt.scale)
 
 G.deconv9_1.weight.data[0][0] = 2 * (1 - scale) * G.deconv9_1.weight.data[0][0].item()
@@ -55,14 +50,6 @@ for j in range(2):
  
 
 
-#exit()
-print('after:')
-print(G.deconv9_1.weight.data)
-print(G.deconv9_2.weight.data)
-print(G.deconv9_3.weight.data)
-print(G.deconv9_4.weight.data)
-#exit()
-"""
 n = 0
 print('Starting testing!')
 
