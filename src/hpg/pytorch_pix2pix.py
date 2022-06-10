@@ -33,9 +33,9 @@ parser.add_argument('--train_epoch', type=int, default=100, help='number of trai
 parser.add_argument('--lrD', type=float, default=0.0002, help='learning rate, default=0.0002')
 parser.add_argument('--lrG', type=float, default=0.0002, help='learning rate, default=0.0002')
 
-parser.add_argument('--L1_lambda', type=float, default=100, help='lambda for L1 loss')
-parser.add_argument('--extremabeta', type=float, default=100, help='scaling factor for extrema loss')
-parser.add_argument('--mm_beta', type=float, default=100, help='scaling factor for multimodal loss')
+parser.add_argument('--L1_lambda1', type=float, default=100, help='lambda for L1 loss')
+parser.add_argument('--extrema_lambda2', type=float, default=100, help='scaling factor for extrema loss')
+parser.add_argument('--mml_lambda3', type=float, default=100, help='scaling factor for multimodal loss')
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for Adam optimizer')
 parser.add_argument('--beta2', type=float, default=0.999, help='beta2 for Adam optimizer')
 parser.add_argument('--save_root', required=False, default='results', help='results save path')
@@ -280,10 +280,10 @@ for epoch in range(opt.train_epoch):
         #print(y_.shape)
         #print(y_1.shape)
 
-        G_train_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_1, y_1) # GAN loss + L1 loss
-        G_train_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_2, y_2)
-        G_train_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_3, y_3)
-        G_train_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_4, y_4)
+        G_train_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_1, y_1) # GAN loss + L1 loss
+        G_train_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_2, y_2)
+        G_train_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_3, y_3)
+        G_train_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_4, y_4)
         
         G_train_loss = (G_train_loss_1 + G_train_loss_2 + G_train_loss_3 + G_train_loss_4) * 0.25
         
@@ -294,7 +294,7 @@ for epoch in range(opt.train_epoch):
         if opt.use_multimodal_loss:
           cbv_pred = (G_result_1+1) * (G_result_3+1) / 2
           if 'L1' in opt.mml_mode:
-            multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mm_beta
+            multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mml_lambda3
             #print('loss: ')
             #print(multimodal_loss)
             #print('G_1:')
@@ -308,10 +308,10 @@ for epoch in range(opt.train_epoch):
             #quit()
           elif 'ssim' in opt.mml_mode: #fix
             ssim_val = compare_ssim(cbv_pred,y_4)
-            multimodal_loss = (1 - ssim_val) * opt.mm_beta 
+            multimodal_loss = (1 - ssim_val) * opt.mml_lambda3 
           elif 'correlation' in opt.mml_mode: #fix
             corr_val = util.corr2(cbv_pred, y_4)
-            multimodal_loss = (1 - corr_val) * opt.mm_beta
+            multimodal_loss = (1 - corr_val) * opt.mml_lambda3
           else:
             print('This multimodal loss mode is not supported')
             quit()
@@ -351,10 +351,10 @@ for epoch in range(opt.train_epoch):
           y_img_4 = cv2.normalize(y_4_copy.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
           #y_img_4[y_img_4==0]=np.nan
           
-          G_extrema_loss_1 = opt.extremabeta * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
-          G_extrema_loss_2 = opt.extremabeta * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
-          G_extrema_loss_3 = opt.extremabeta * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
-          G_extrema_loss_4 = opt.extremabeta * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
+          G_extrema_loss_1 = opt.extrema_lambda2 * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
+          G_extrema_loss_2 = opt.extrema_lambda2 * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
+          G_extrema_loss_3 = opt.extrema_lambda2 * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
+          G_extrema_loss_4 = opt.extrema_lambda2 * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
           G_extrema_loss = (G_extrema_loss_1 + G_extrema_loss_2 + G_extrema_loss_3 + G_extrema_loss_4) * 0.25
           
           G_train_loss = G_train_loss + G_extrema_loss
@@ -483,10 +483,10 @@ for epoch in range(opt.train_epoch):
         y_3 = y_val[:, :, :, 512:768]
         y_4 = y_val[:, :, :, 768:1024]
 
-        G_val_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_1, y_1)
-        G_val_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_2, y_2)
-        G_val_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_3, y_3)
-        G_val_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda())) + opt.L1_lambda * L1_loss(G_result_4, y_4)
+        G_val_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_1, y_1)
+        G_val_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_2, y_2)
+        G_val_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_3, y_3)
+        G_val_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_4, y_4)
       
         G_val_loss = (G_val_loss_1 + G_val_loss_2 + G_val_loss_3 + G_val_loss_4) * 0.25
         
@@ -494,13 +494,13 @@ for epoch in range(opt.train_epoch):
         if opt.use_multimodal_loss:
           cbv_pred = ((G_result_1+1) * (G_result_3+1)) / 2
           if 'L1' in opt.mml_mode:
-            multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mm_beta
+            multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mml_lambda3
           elif 'ssim' in opt.mml_mode: #fix
             ssim_val = compare_ssim(cbv_pred,y_4)
-            multimodal_loss = (1 - ssim_val) * opt.mm_beta
+            multimodal_loss = (1 - ssim_val) * opt.mml_lambda3
           elif 'correlation' in opt.mml_mode: #fix
             corr_val = util.corr2(cbv_pred, y_4)
-            multimodal_loss = (1 - corr_val) * opt.mm_beta 
+            multimodal_loss = (1 - corr_val) * opt.mml_lambda3 
           else:
             print('This multimodal loss mode is not supported')
             quit()
@@ -531,10 +531,10 @@ for epoch in range(opt.train_epoch):
           y_img_4 = cv2.normalize(y_4_copy.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
           #y_img_4[y_img_4==0]=np.nan
           
-          G_extrema_loss_1 = opt.extremabeta * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
-          G_extrema_loss_2 = opt.extremabeta * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
-          G_extrema_loss_3 = opt.extremabeta * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
-          G_extrema_loss_4 = opt.extremabeta * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
+          G_extrema_loss_1 = opt.extrema_lambda2 * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
+          G_extrema_loss_2 = opt.extrema_lambda2 * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
+          G_extrema_loss_3 = opt.extrema_lambda2 * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
+          G_extrema_loss_4 = opt.extrema_lambda2 * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
           G_extrema_loss = (G_extrema_loss_1 + G_extrema_loss_2 + G_extrema_loss_3 + G_extrema_loss_4) * 0.25
           
           G_val_loss = G_val_loss + G_extrema_loss
