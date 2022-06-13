@@ -65,12 +65,10 @@ with torch.no_grad():
       s_ind = len(s) - s.find('/')
       e_ind = len(s) - s.find('.')
       ind = test_loader.dataset.imgs[n][0][s_ind:e_ind-1]
-      path = opt.dataset + '_results/test_results_lr5e-5/' + ind + '_output.png'
+      path = opt.dataset + '_results/test_results/' + ind + '_output.png'
       testimg = test_image[0].cpu().data.numpy().squeeze()
-      #print((np.stack((testimg,)*3,0)).shape)
       img = (np.stack((testimg,)*3,0).transpose(1, 2, 0) + 1) / 2
-      #print(img.shape)
-      #print(img[0:3,0:3])
+
       plt.imsave(path, img)
   
       n += 1
