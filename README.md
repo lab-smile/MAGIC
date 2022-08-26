@@ -34,38 +34,91 @@ We provide a small sample training set for evaluation and introduction to this p
 Each data sample has been preprocessed using our [newp2pdataset.m](src/preprocessing/newp2pdataset.m) script to put the grayscale image data in a 1280x256 format. Each sample contains 5 images, each corresponding to a different modality. This is illustrated in the image below. From left to right, the image in each data sample are noncontrast CT, mean transit time (MTT), time-to-peak (TTP), cerebral blood flow (CBF), and cerebral blood volume (CBV). These 5 paired slices are put together in the same image file for the ease of loading data in while training our model. An example of a input sample is shown in the figure below.
 ![](https://github.com/lab-smile/MAGIC/blob/main/images/trainsample1.png?raw=true)
 
-## Training Instructions
-### GPU Server
-On the lab's GPU server, you can activate the appropriate Python environment using Anaconda with the following command.
+### 1. System Requirements
+We recommend using the Linux operating system. All listed commands in this part are based on the Linux operation system. We highly recommend using a GPU system for computation, but these code and directions are compatible with CPU only. 
+
+We used Linux (GNU/Linux 3.10.0-1062.18.1.el7.x86_64) and an NVIDIA TITAN X GPU with CUDA version 7.6.5. 
+### 2. Environment setup and Installation
+We recommend installing Anaconda (https://www.anaconda.com/products/distribution#Downloads) to activate the appropriate Python environment with the following commands: 
+
+- Download the repository
 ```
-source /home/pengliu/anaconda3/bin/activate py3-2
+git clone https://github.com/lab-smile/MAGIC.git 
+
+cd MAGIC/src/gpu 
 ```
-This will activate a Python environment that already has all the appropriate libraries installed.
+- Create an environment with the required packages
+```
+conda env create -f magic_env.yml
+```
+- Activate the environment
+```
+conda activate magic_env
+or
+source activate magic_env
+```
+- Sample Dataset
 
-Navigate to the directory that contains the Python script for [training](src/gpu/pytorch_pix2pix.py) your model. This will be wherever [src/gpu/pytorch_pix2pix.py](src/gpu/pytorch_pix2pix.py) is stored.
+After activate the required environment, navigate to the directory that contains the MAGIC model. You can find a sample dataset at
+```
+cd MAGIC/src/sample
+```
+We provide a small sample of deidentified NCCT and CTP image data for evaluation and experimentation. You can find two subfolders for training and testing the model within this directory. The training set contains 48 samples from 5 patients, and the testing set contains 10 samples from 1 patient.  
+Each image sample has been preprocessed to a grayscale format and contains both the NCCT and CTP data for a given slice. Each image is presented in a 1280x256 montage. From left to right, the images comprising each sample are non-contrast CT, mean transit time (MTT), time-to-peak (TTP), cerebral blood flow (CBF), and cerebral blood volume (CBV). You can use this sample dataset for the following steps.
 
-Run the training script directly from the command line using the following command: ```python pytorch_pix2pix.py```
+### 3. GPU Server Training Instruction
 
-In this command line, you can specify program inputs (e.g., learning rates, output folders, number of training epochs, etc.) using flags for each input. The possible arguments for this command line input are shown at the beginning of [pytorch_pix2pix.py](src/gpu/pytorch_pix2pix.py). An example of a command line input with these specified inputs is as follows: ```pytorch_pix2pix.py --dataset '../sample' --lrG 0.00005 --lrD 0.00005  --train_epoch 50 --save_root 'sample_results'```
+Navigate to the directory that contains the Python script [pytorch_pix2pix.py](src/gpu/pytorch_pix2pix.py) for training.
+```
+cd MAGIC/src/gpu
+```
+Run the training script directly from the command line using the following command:  
+```
+python pytorch_pix2pix.py 
+```
+You can specify learning rates, output save direction, number of training epochs, etc. using command line arguments. For example:  
+```
+python pytorch_pix2pix.py --dataset '../sample' --lrG 0.00005 --lrD 0.00005 --train_epoch 50 --save_root 'results' 
+```
+After training, you will find: 
 
-For larger datasets, it is recommended that you run the training process inside of a screen session. The training process takes a long time, so we use a screen session to allow our training to run in the background. The program will continue to run even if you disconnect from the SSH server. You can establish a screen session using the following commands.
+- A results folder containing the results of the training process, which is required for testing. The name of this folder is determined by the specified dataset and ```save_root``` arguments. For the above example, this folder will be titled ```/src/gpu/sample_results```. 
 
-- Before activating the screen session, deactivate the base Python environment using the following command: ```source deactivate```
-- Initialize a new screen session using the following command: ```screen```
+- ```sample_train_hist_[epoch_num].pkl``` and ```sample_train_hist_[epoch_num].png``` for visualization of how each loss terms changes during the course of training. 
+
+- ```sample_generator_param_final.pkl``` and ```sample_discriminator_param.pkl```, each containing the fully trained generator and discriminator, respectively. 
+
+For larger datasets, we recommend that running the training process inside of a screen session. Because the training process will take a long time for a large dataset, the screen session allow code runing in the backgroud. The program will continue to run even if you disconnect from the SSH server. You can establish a screen session using the following commands.
+- Before activating the screen session, deactivate the base Python environment using the following command:
+```
+source deactivate
+```
+- Initialize a new screen session using the following command: 
+```
+screen
+```
 - Activate the Python environment and begin the training process using the same commands as above.
 - Detach from the screen session
-    - Press Ctrl+A to enter screen command mode (nothing will appear onscreen)
-    - Press D to detach from the current screen
+```
+Press Ctrl+A to enter screen command mode (nothing will appear onscreen)
+Press D to detach from the current screen
+```
 - You are now able to safely disconnect from the SSH server until the training process has completed.
-- When the training process is complete, reattach to the screen session using the following command: ```screen -dr```
+When the training process is complete, reattach to the screen session using the following command: 
+```
+screen -dr
+```
 
-
-### HiPerGator
+### 4. HiPerGator Training Instruction
 HiPerGator (HPG) offers the benefit of increased processing speeds and access to high-power GPUs, but the interface is not as user-friendly as the lab's GPU server. On HPG, programs must be submitted as a batch SLURM script. These batch jobs can be submitted using the ```sbatch``` command, followed by the name of the corresponding shell (.sh) script.
 
-I have attached a [sample training shell script](src/hpg/training.sh) to be used as an input for the sbatch command. The program inputs, environment path, and sbatch inputs are specified in this slurm script. The content of this shell script is shown below.
-
-> #!/bin/sh
+Navigate to the directory that contains the shell script  [training.sh](src/hpg/training.sh) for training.
+```
+cd MAGIC/src/hpg/training.sh
+```
+The program inputs, environment path, and sbatch inputs are specified in this slurm script. The content of this shell script is shown below.
+```
+#!/bin/sh
 #SBATCH --job-name=dl_training_experiment
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gfullerton@ufl.edu
@@ -83,26 +136,43 @@ python pytorch_pix2pix.py --dataset 'new_augmented_data' \
   --n_epochs_decay 50 --save_freq 10 --batch_size 8 \
   --test_batch_size 10 --save_root 'results_lr_5e-5' --n_epochs 50 --train_epoch 50
 date
-
-Inside this sbatch script, you can specify the memory allocation, memory partitioning, and GPU type and number for the training process. More information about constructing an sbatch shell script can be found on the [HPG wiki](https://help.rc.ufl.edu/doc/Getting_Started).
-
-This shell script can be submitted using the command ```sbatch training.sh```. This will submit your job in the processing queue, and the training process will begin once the appropriate resources become available. You can now safely disconnect from the HPG server, and you will receive an email once your job is either complete, encounters an error, or runs out of memory.
-
-## Testing Instructions
-### GPU Server
-The test script is stored in the Python file [pytorch_pix2pix_test.py](src/gpu/pytorch_pix2pix_test.py) and is used to apply the trained model on the inputs in the test data subfolder. Similarly to the training process, activate the appropriate Python environment using the following command:
-```
-source /home/pengliu/anaconda3/bin/activate py3-2
 ```
 
-The [test script](src/gpu/pytorch_pix2pix_test.py) can be run using the same method used to run the training script. The inputs to this script can be specified in the command line using the same flag format. An example command line input to run the test script is given below:
-```
-python pytorch_pix2pix_test.py --dataset new_augmented_data --save_root 'new_aug_learning_rate_1'
-```
+You can specify the memory allocation, memory partitioning, and GPU type and number for the training process by directly modify this shell script. More information about constructing an sbatch shell script can be found on the [HPG wiki](https://help.rc.ufl.edu/doc/Getting_Started).
 
-### HiPerGator
-Similarly to the training process, the test script must be submitted as a batch job to HiPerGator in the form of a SLURM script. This can be done using the following code ```sbatch testing.sh```. The [testing.sh](src/hpg/testing.sh) script is provided as part of this repository, and it is additionally shown below.
->#!/bin/sh
+Running the training shell script by using the following command:
+```
+sbatch training.sh
+```
+This will submit your job in the processing queue, and the training process will begin once the appropriate resources become available. You can check the state of the task by using；
+```
+squeue -A [your_group_name]
+```
+You can now safely disconnect from the HPG server, and you will receive an email once your job is either complete, encounters an error, or runs out of memory.
+
+## Testing Instruction
+### 1. GPU Server Testing Instruction
+
+Navigate to the directory that contains the Python script [pytorch_pix2pix_test.py](src/gpu/pytorch_pix2pix_test.py) for testing. 
+
+Determine the ```dataset``` and ```save_root``` arguments. These should be the same specifications used for training. 
+
+The perfusion information ratio of the PILO module can be optionally adjusted by specifying a value for the ```scale``` argument between 0 and 1. A higher perfusion information ratio results in increased perfusion representation in the generated maps, and a lower perfusion information ratio results in increased anatomic representation in the generated maps.  
+
+After specifying the dataset and save_root arguments, run the test script using the following command: 
+```
+python pytorch_pix2pix_test.py --dataset '../sample' --save_root 'results' 
+```
+After running the test script, you will find: 
+- A subfolder in the in the results folder titled ```test_results```. For the above example, this folder will be located under ```/src/gpu/sample_results/test_results```. 
+### 2. HPG Server Testing Instruction
+Similarly to the training process, the test script also need to be submitted as a batch job to HiPerGator in the form of a SLURM script. Navigate to the directory that contains the shell script [testing.sh](src/hpg/testing.sh) for testing.
+```
+cd MAGIC/src/hpg/testing.sh
+```
+The content of this shell script is shown below.
+```
+#!/bin/sh
 #SBATCH --job-name=dl_training_experiment
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gfullerton@ufl.edu
@@ -114,8 +184,13 @@ date;hostname;pwd
 export PATH=/home/gfullerton/.conda/envs/py3/bin:$PATH
 python pytorch_pix2pix_test.py --dataset new_augmented_data --save_root 'new_aug_learning_rate_1'
 date
+```
+You need to specify the dataset and the save_root as same as the specifications used in the [training.sh](src/hpg/training.sh) .
 
-Since this is a much less resource intensive program than the training script, we can significantly reduce the memory allocation request size and the request time. This will apply the trained model to the data samples in the test subfolder and save the outputs as PNG images. These can then be downloaded to your local CPU for further postprocessing.
+Running the testing shell script by using the following command:
+```
+sbatch testing.sh
+```
 
 ## Postprocessing & Evaluation
 ### Figure Generation
