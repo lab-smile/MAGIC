@@ -41,7 +41,7 @@ We recommend using the Linux operating system. All listed commands in this part 
 We used Linux (GNU/Linux 3.10.0-1062.18.1.el7.x86_64) and an NVIDIA TITAN X GPU with CUDA version 7.6.5. 
 
 ### Docker Environment Setup
-We recommend using the Docker to run this model. We provided the docker image that conclude all dependencies and requirments. Please follow [this link](https://docs.docker.com/desktop/install/windows-install/) to install Docker Engine if you want to run this model through the Docker, and follow [this link]() to install the Docker Compose.
+We recommend using the Docker to run this model. We provided the docker image that conclude all dependencies and requirments. Please follow [this link](https://docs.docker.com/desktop/install/windows-install/) to install Docker Engine if you want to run this model through the Docker, and follow [this link](https://docs.docker.com/compose/install/) to install the Docker Compose.
 
 The Dockerfile is also provided in this repository. By using the Docker image, you can firstly run and pull the docker by using following commands:
 ```
