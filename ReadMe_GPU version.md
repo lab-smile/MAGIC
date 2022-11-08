@@ -89,7 +89,7 @@ cd /home/USER/MAGIC/src/gpu/
 ```
 2. Train a model on the sample data
 ```
-python pytorch_pix2pix.py --dataset '../sample' --lrG 0.00005 --lrD 0.00005 --train_epoch 50 --save_root 'sample'
+python pytorch_pix2pix.py --dataset '../sample' --lrG 0.00005 --lrD 0.00005 --train_epoch 50 --save_root 'results'
 ```
 
 3. Test the model on sample data
