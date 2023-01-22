@@ -43,14 +43,17 @@ We used Linux (GNU/Linux 3.10.0-1062.18.1.el7.x86_64) and an NVIDIA TITAN X GPU 
 ### Docker Environment Setup
 We recommend using the Docker to run this model. We provided the docker image that conclude all dependencies and requirments. Please follow [this link](https://docs.docker.com/desktop/install/windows-install/) to install Docker Engine if you want to run this model through the Docker, and follow [this link](https://docs.docker.com/compose/install/) to install the Docker Compose.
 
-The Dockerfile is also provided in this repository. By using the Docker image, you can firstly run and pull the docker by using following commands:
+The Dockerfile is also provided in this repository. To build the Docker image locally (make sure you are on the top level of this project which is the same level as Dockerfile):
 ```
-docker run -d -p 9000:9000  --restart=always  -v /var/run/docker.sock:/var/run/docker.sock  --name portainer  docker.io/portainer/portainer
-
-docker run -it nvidia/cuda:11.7.1-devel-ubuntu20.04
-
-docker run -it x:1
+docker build --platform linux/x86_64 -t magic ./
 ```
+
+To start a docker container and run the training script:
+```
+docker run --platform linux/x86_64 -it magic
+```
+Note: Running the training script in docker container is only supported on host machine that runs [supported Linux distributions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). It's not supported if your machine is on Mac because nvidia-docker that's used for building docker containers with GPU driver is [not supported on Mac](https://github.com/NVIDIA/nvidia-docker/wiki/#is-macos-supported).
+
 
 ### Environment setup and Installation
 We recommend installing Anaconda (https://www.anaconda.com/products/distribution#Downloads) to activate the appropriate Python environment with the following commands: 
