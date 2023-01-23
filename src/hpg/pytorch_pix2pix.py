@@ -8,7 +8,7 @@ import torch.optim as optim
 from torchvision import transforms
 from torch.autograd import Variable
 import cv2
-from skimage.measure import compare_ssim
+from skimage.metrics import structural_similarity
 import numpy as np
 from prettytable import PrettyTable
 import random
@@ -307,7 +307,7 @@ for epoch in range(opt.train_epoch):
             #print((y_4+1)/2)
             #quit()
           elif 'ssim' in opt.mml_mode: #fix
-            ssim_val = compare_ssim(cbv_pred,y_4)
+            ssim_val = structural_similarity(cbv_pred,y_4)
             multimodal_loss = (1 - ssim_val) * opt.mml_lambda3 
           elif 'correlation' in opt.mml_mode: #fix
             corr_val = util.corr2(cbv_pred, y_4)

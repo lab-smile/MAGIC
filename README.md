@@ -37,7 +37,8 @@ Each data sample has been preprocessed using our [newp2pdataset.m](src/preproces
 ### 1. System Requirements
 We recommend using the Linux operating system. All listed commands in this part are based on the Linux operation system. We highly recommend using a GPU system for computation, but these code and directions are compatible with CPU only. 
 
-We used Linux (GNU/Linux 3.10.0-1062.18.1.el7.x86_64) and an NVIDIA TITAN X GPU with CUDA version 7.6.5. 
+We used Linux (GNU/Linux 3.10.0-1062.18.1.el7.x86_64) and an NVIDIA TITAN X GPU with CUDA version 7.6.5.
+
 ### 2. Environment setup and Installation
 We recommend installing Anaconda (https://www.anaconda.com/products/distribution#Downloads) to activate the appropriate Python environment with the following commands: 
 
@@ -114,27 +115,46 @@ HiPerGator (HPG) offers the benefit of increased processing speeds and access to
 
 Navigate to the directory that contains the shell script  [training.sh](src/hpg/training.sh) for training.
 ```
-cd MAGIC/src/hpg/training.sh
+cd MAGIC/src/hpg/
 ```
 The program inputs, environment path, and sbatch inputs are specified in this slurm script. The content of this shell script is shown below.
-```
+```bash
 #!/bin/sh
-#SBATCH --job-name=dl_training_experiment
+#SBATCH --job-name=MAGIC_TrainModel
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=gfullerton@ufl.edu
+#SBATCH --mail-user=USER@ufl.edu        # ADD EMAIL HERE
 #SBATCH --ntasks=8
-#SBATCH --mem=7000mb
+#SBATCH --mem=10gb
 #SBATCH --time=20:00:00
-#SBATCH --output=dl_experiment_%j.out
 #SBATCH --partition=gpu
-#SBATCH --gpus=quadro:1
+#SBATCH --gpus=1
 #SBATCH --distribution=cyclic:cyclic
->date;hostname;pwd
-export PATH=/home/gfullerton/.conda/envs/py3/bin:$PATH
-python pytorch_pix2pix.py --dataset 'new_augmented_data' \
-	--lrG 0.00005 --lrD 0.00005 --extremabeta 10000 \
-  --n_epochs_decay 50 --save_freq 10 --batch_size 8 \
-  --test_batch_size 10 --save_root 'results_lr_5e-5' --n_epochs 50 --train_epoch 50
+#SBATCH --output=hpg_trainmodel_%j.out
+
+date; hostname; pwd
+
+#  Load environment (Option 1)
+#===============================
+module load conda
+conda activate magic_env
+
+#  Load environment (Option 2)   
+#===============================
+# If you have the location of your environment bin folder
+#export PATH=/home/USER/.conda/envs/magic_env/bin:$PATH
+
+#     Training a Model    
+#===========================
+dataset="../sample"   # Dataset path
+lrG=0.00005           # Generator Learning Rate
+lrD=0.00005           # Discriminator Learning Rate
+train_epoch=50        # Number of epochs
+save_root="results"   # Name for saved root folder
+
+python pytorch_pix2pix.py --dataset $dataset \
+	--lrG $lrG --lrD $lrD --train_epoch $train_epoch \
+  --save_root $save_root\
+
 date
 ```
 
@@ -168,21 +188,41 @@ After running the test script, you will find:
 ### 2. HPG Server Testing Instruction
 Similarly to the training process, the test script also need to be submitted as a batch job to HiPerGator in the form of a SLURM script. Navigate to the directory that contains the shell script [testing.sh](src/hpg/testing.sh) for testing.
 ```
-cd MAGIC/src/hpg/testing.sh
+cd MAGIC/src/hpg/
 ```
 The content of this shell script is shown below.
-```
+```bash
 #!/bin/sh
-#SBATCH --job-name=dl_training_experiment
+#SBATCH --job-name=MAGIC_TestModel
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=gfullerton@ufl.edu
+#SBATCH --mail-user=USER@ufl.edu # ADD EMAIL HERE
 #SBATCH --ntasks=1
-#SBATCH --mem=400mb
-#SBATCH --time=00:05:00
-#SBATCH --output=dl_experiment_testing_%j.out
-date;hostname;pwd
-export PATH=/home/gfullerton/.conda/envs/py3/bin:$PATH
-python pytorch_pix2pix_test.py --dataset new_augmented_data --save_root 'new_aug_learning_rate_1'
+#SBATCH --mem=5gb
+#SBATCH --time=00:10:00
+#SBATCH --partition=gpu
+#SBATCH --gpus=1
+#SBATCH --output=hpg_testmodel_%j.out
+
+date; hostname; pwd
+
+#  Load environment (Option 1)
+#===============================
+module load conda
+conda activate magic_env
+
+#  Load environment (Option 2)   
+#===============================
+# If you have the location of your environment bin folder
+#export PATH=/home/USER/.conda/envs/magic_env/bin:$PATH
+
+#      Testing a Model    
+#===========================
+dataset="../sample"                        # Dataset path
+save_root="results"                        # Name for saved root folder
+model_path="../MAGIC_Generator_FINAL.pkl"  # Model path
+
+python pytorch_pix2pix_test.py --dataset $dataset --save_root $save_root --model_path $model_path
+
 date
 ```
 You need to specify the dataset and the save_root as same as the specifications used in the [training.sh](src/hpg/training.sh) .

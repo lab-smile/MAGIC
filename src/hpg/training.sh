@@ -1,22 +1,37 @@
 #!/bin/sh
-#SBATCH --job-name=dl_training_experiment
+#SBATCH --job-name=MAGIC_TrainModel
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=gfullerton@ufl.edu
+#SBATCH --mail-user=USER@ufl.edu        # ADD EMAIL HERE
 #SBATCH --ntasks=8
-#SBATCH --mem=7000mb
+#SBATCH --mem=10gb
 #SBATCH --time=20:00:00
-#SBATCH --output=dl_experiment_%j.out
 #SBATCH --partition=gpu
-#SBATCH --gpus=quadro:1
+#SBATCH --gpus=1
 #SBATCH --distribution=cyclic:cyclic
+#SBATCH --output=hpg_trainmodel_%j.out
 
-date;hostname;pwd
+date; hostname; pwd
 
-export PATH=/home/gfullerton/.conda/envs/py3/bin:$PATH
+#  Load environment (Option 1)
+#===============================
+module load conda
+conda activate magic_env
 
-python pytorch_pix2pix.py --dataset 'new_augmented_data' \
-	--lrG 0.00005 --lrD 0.00005 --extremabeta 10000 \
-  --n_epochs_decay 50 --save_freq 10 --batch_size 8 \
-  --test_batch_size 10 --save_root 'results_lr_5e-5' --n_epochs 50 --train_epoch 50
+#  Load environment (Option 2)   
+#===============================
+# If you have the location of your environment bin folder
+#export PATH=/home/USER/.conda/envs/magic_env/bin:$PATH
+
+#     Training a Model    
+#===========================
+dataset="../sample"   # Dataset path
+lrG=0.00005           # Generator Learning Rate
+lrD=0.00005           # Discriminator Learning Rate
+train_epoch=50        # Number of epochs
+save_root="results"   # Name for saved root folder
+
+python pytorch_pix2pix.py --dataset $dataset \
+	--lrG $lrG --lrD $lrD --train_epoch $train_epoch \
+  --save_root $save_root\
 
 date

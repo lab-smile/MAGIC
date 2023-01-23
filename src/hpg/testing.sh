@@ -1,18 +1,32 @@
 #!/bin/sh
-#SBATCH --job-name=dl_training_experiment
+#SBATCH --job-name=MAGIC_TestModel
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=gfullerton@ufl.edu
+#SBATCH --mail-user=USER@ufl.edu # ADD EMAIL HERE
 #SBATCH --ntasks=1
-#SBATCH --mem=400mb
-#SBATCH --time=00:05:00
-#SBATCH --output=dl_experiment_testing_%j.out
+#SBATCH --mem=5gb
+#SBATCH --time=00:10:00
+#SBATCH --partition=gpu
+#SBATCH --gpus=1
+#SBATCH --output=hpg_testmodel_%j.out
 
-date;hostname;pwd
+date; hostname; pwd
 
-export PATH=/home/gfullerton/.conda/envs/py3/bin:$PATH
+#  Load environment (Option 1)
+#===============================
+module load conda
+conda activate magic_env
 
-python pytorch_pix2pix_test.py --dataset new_augmented_data --save_root 'new_aug_learning_rate_1'
+#  Load environment (Option 2)   
+#===============================
+# If you have the location of your environment bin folder
+#export PATH=/home/USER/.conda/envs/magic_env/bin:$PATH
+
+#      Testing a Model    
+#===========================
+dataset="../sample"                        # Dataset path
+save_root="results"                        # Name for saved root folder
+model_path="../MAGIC_Generator_FINAL.pkl"  # Model path
+
+python pytorch_pix2pix_test.py --dataset $dataset --save_root $save_root --model_path $model_path
 
 date
-
-
