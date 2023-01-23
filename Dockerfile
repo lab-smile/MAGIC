@@ -24,4 +24,4 @@ FROM nvidia/cuda:11.7.1-devel-ubuntu20.04 AS RUNTIME
 COPY --from=BUILD_CONDA_ENV /venv /venv
 COPY src /src
 WORKDIR /src/gpu
-RUN ["/bin/bash", "-c", "source /venv/bin/activate && python pytorch_pix2pix.py --dataset '../sample' --lrG 0.00005 --lrD 0.00005 --train_epoch 50 --save_root 'results'"]
+CMD ["/bin/bash", "-c", "source /venv/bin/activate && python pytorch_pix2pix.py --dataset '../sample' --lrG 0.00005 --lrD 0.00005 --train_epoch 50 --save_root 'results'"]
