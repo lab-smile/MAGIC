@@ -5,9 +5,8 @@
 #SBATCH --ntasks=8
 #SBATCH --mem=10gb
 #SBATCH --time=20:00:00
-#SBATCH --partition=gpu
-#SBATCH --gpus=1
-#SBATCH --distribution=cyclic:cyclic
+#SBATCH --partition=hpg-ai
+#SBATCH --gpus=a100:1
 #SBATCH --output=hpg_trainmodel_%j.out
 
 date; hostname; pwd
@@ -32,6 +31,6 @@ save_root="results"   # Name for saved root folder
 
 python pytorch_pix2pix.py --dataset $dataset \
 	--lrG $lrG --lrD $lrD --train_epoch $train_epoch \
-  --save_root $save_root\
+  --save_root $save_root
 
 date

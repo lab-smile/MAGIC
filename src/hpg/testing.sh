@@ -5,8 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=5gb
 #SBATCH --time=00:10:00
-#SBATCH --partition=gpu
-#SBATCH --gpus=1
+#SBATCH --partition=hpg-ai
+#SBATCH --gpus=a100:1
 #SBATCH --output=hpg_testmodel_%j.out
 
 date; hostname; pwd
