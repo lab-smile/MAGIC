@@ -69,7 +69,7 @@ Each image sample has been preprocessed to a grayscale format and contains both 
 
 To train on the original dataset, set the dataset parameters in the following commands to the following path:
 ```
-dataset = /blue/ruogu.fang/gfullerton/pytorch-pix2pix/new_augmented_data
+dataset = '/blue/ruogu.fang/gfullerton/pytorch-pix2pix/new_augmented_data'
 ```
 
 ### 3. GPU Server Training Instruction
