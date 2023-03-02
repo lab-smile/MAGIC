@@ -67,6 +67,11 @@ cd MAGIC/src/sample
 We provide a small sample of deidentified NCCT and CTP image data for evaluation and experimentation. You can find two subfolders for training and testing the model within this directory. The training set contains 48 samples from 5 patients, and the testing set contains 10 samples from 1 patient.  
 Each image sample has been preprocessed to a grayscale format and contains both the NCCT and CTP data for a given slice. Each image is presented in a 1280x256 montage. From left to right, the images comprising each sample are non-contrast CT, mean transit time (MTT), time-to-peak (TTP), cerebral blood flow (CBF), and cerebral blood volume (CBV). You can use this sample dataset for the following steps.
 
+To train on the original dataset, set the dataset parameters in the following commands to the following path:
+```
+dataset = /blue/ruogu.fang/gfullerton/pytorch-pix2pix/new_augmented_data
+```
+
 ### 3. GPU Server Training Instruction
 
 Navigate to the directory that contains the Python script [pytorch_pix2pix.py](src/gpu/pytorch_pix2pix.py) for training.
