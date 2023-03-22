@@ -1,9 +1,9 @@
+import io
 import base64
 
+from flask_cors import CORS, cross_origin
 from flask import Flask, request, jsonify
 from PIL import Image, ImageOps
-import io
-from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app)
@@ -15,23 +15,29 @@ def index():
     return jsonify({"message": "hello, world"})
 
 
-@app.route('/convert', methods=['POST'])
+@app.route('/api/upload', methods=['POST'])
 @cross_origin()
-def convert_image():
+def upload_image():
     # Get the image from the request
-    image_data_str = request.form['image']
+    image_data_str = request.form['image'].split(",")
+    if len(image_data_str) < 2:
+        return jsonify({"message": "Invalid image"}), 400
     # Open the image with PIL
-    img_data = image_data_str.split(",")[1].encode("utf-8")
+    img_data = image_data_str[1].encode("utf-8")
     img_binary_data = io.BytesIO(base64.decodebytes(img_data))
     image = Image.open(img_binary_data)
     # Invert the colors of the image
     inverted_image = ImageOps.invert(image.convert('RGB'))
-    # Save the output image to a buffer
-    output_buffer = io.BytesIO()
-    inverted_image.save(output_buffer, format='PNG')
-    # Return the output image
-    inverted_image_encoded = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
-    return jsonify({'image': f"data:image/png;base64,{inverted_image_encoded}"})
+    images = [inverted_image] * 4
+
+    base64_images = []
+    for img in images:
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        base64_images.append(f"data:image/png;base64,{img_str}")
+
+    return jsonify({"images": base64_images})
 
 
 if __name__ == '__main__':
