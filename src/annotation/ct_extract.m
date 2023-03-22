@@ -1,4 +1,4 @@
-% function [] = ct_extract(folder_deid,folder_extr,folder_anno)
+function [] = ct_extract(folder_deid,folder_extr,folder_anno)
 %% Temporal CT Extraction
 % This function is used to find temporal CT data. It is known to be a
 % series 3 image using the CT metadata. Each time point for the series 3
@@ -35,25 +35,36 @@
 %       This will also skip the dcm2niix steps in the bash script.
 %   - Handles multiple study folders. A second study folder contains a
 %       single folder and usually has "IVCON_WO" in the name.
+%   - The study folder that has "IVCON_WO" can sometimes have the data
+%       instead.
 % ------------------------------------------------------------------------
 % Changes
-%   - 3/2/23: Removed "IVCON_WO" skip. I found one example which
-%       contradicts this rule I made. The only folder that contained the
-%       data had this string. I switched to just read directories anyways.
-%   - 3/3/23: Fixed an issue where series 3 showed up on a bunch of other
-%       files. This is circumvented by adding a byte requirement of >20MB.
-%   - 3/8/23: Added a new folder. Generates same folder structure as the
-%       extracted folders.
-%       - Changed variable names to folders instead of i/o
+% 3/2/23
+% - Removed "IVCON_WO" skip. I found one example which contradicts this
+%       rule I made. The only folder that contained the data had this
+%       string. I switched to just read directories anyways.
+% 
+% 3/3/23
+% - Fixed an issue where series 3 showed up on a bunch of other files.
+%       This is circumvented by adding a byte requirement of >20MB.
+% 
+% 3/8/23
+% - Added a new folder. Generates same folder structure as the extracted
+%       folders.
+% - Changed variable names to folders instead of i/o
+% 
+% 3/22/23
+% - Fixed an issue where missing folders are generated even when temporal
+%       data is found. This resulted in both a missing and data folder.
 
 %% Code
 % Testing settings. 
 % To test: Comment lines 1 & 198 | Uncomment lines 53-56
 % #########################################
 close all; clear; clc;
-folder_deid = './ct_deidentified';
-folder_extr = './ct_extracted';
-folder_anno = './ct_annotated';
+% folder_deid = './testing_metadata_deid';
+% folder_extr = './testing_metadata_extr';
+% folder_anno = './testing_metadata_anno';
 % #########################################
 
 % Get list of IDs
@@ -101,15 +112,9 @@ if ~isempty(dir_subj_deid)
         % cd into subject folder
         dir_study = dir_list(fullfile(folder_deid,dir_subj_deid(i).name));
 
-        %         % Skip any second study folders (includes IVCON_WO)
-        %         idx = [];
-        %         for s1 = 1:length(dir_study)
-        %             if contains(dir_study(s1).name,'IVCON_WO-')
-        %                 idx = s1;
-        %             end
-        %         end
-        %         dir_study(idx) = []; % Remove extra study folder
-
+        % Generate missing folder only once all study folders are checked
+        missing_counter = 0; % A check for missing data
+        
         % Loop through each study folder.
         for s1 = 1:length(dir_study)
 
@@ -150,7 +155,7 @@ if ~isempty(dir_subj_deid)
                 end
 
                 % Set shell start and stop
-                if exist(shell_inputpath) % If found, print parameters
+                if exist(shell_inputpath,'dir') % If found, print parameters
                     shell_start = min(shell_numbers);
                     shell_stop = max(shell_numbers);
 
@@ -169,14 +174,20 @@ if ~isempty(dir_subj_deid)
                     fprintf(fid,"%s\n%s\n%d\n%d\n",shell_inputpath, dir_subj_deid(i).name, shell_start, shell_stop);
                     fclose(fid);
                     fprintf("Parameters recorded for %s\n",dir_subj_deid(i).name)
-
-                else
-                    fprintf("DID NOT FIND FOR %s\n",dir_subj_deid(i).name)
-                    mkdir(fullfile(folder_extr,[dir_subj_deid(i).name,'_missing']))
-                    mkdir(fullfile(folder_anno,[dir_subj_deid(i).name,'_missing']))
+                    
+                    missing_counter = missing_counter + 1;   
                 end
             end
+            
         end
+
+        % Generate missing folder ONLY if no temporal data was found
+        if missing_counter == 0
+            fprintf("DID NOT FIND FOR %s\n",dir_subj_deid(i).name)
+            mkdir(fullfile(folder_extr,[dir_subj_deid(i).name,'_missing']))
+            mkdir(fullfile(folder_anno,[dir_subj_deid(i).name,'_missing']))
+        end
+        
     end
 else
     % If all folders exist, delete bash_param.txt for the shell script
@@ -195,4 +206,4 @@ end
         dir_input = dir(input_path);
         output_dir = dir_input(~ismember({dir_input.name},{'.','..'}));
     end
-% end
+end

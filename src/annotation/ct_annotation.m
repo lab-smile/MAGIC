@@ -20,7 +20,7 @@
 % - Modify ROI if needed
 %
 %---------------------------------------------
-% Last Updated: 3/15/2023
+% Last Updated: 3/19/2023
 % 2/28/23
 % - Changed .mat loading to .nifti
 % - Removed .mat associations for loading
@@ -44,8 +44,17 @@
 % - Added figure window option depending on local or HPG
 % - Changed the naming scheme to include the annotators initials
 % - Changed the title for the manual override to 'Manual location' from
-%   'Most likely location'
+%       'Most likely location'
 % - Fixed figure window conflicts using close all in the select functions.
+% 
+% 3/19/23
+% - Added an erosion feature which separately erodes the top and bottom
+%       half of the image. The top erosion is more harsh while the bottom
+%       is less harsh to account for the VOF positioned close to the edge.
+% - Added a fixed ROI position. The top of the AIF ROI begins slightly
+%       below the top-most pixel in the brain mask. The AIF VOF is centered
+%       on the bottom-most pixel in the brain mask, which corresponds to
+%       the SSS target.
 % 
 % To-do
 % - Design a method to automatically reject bad AIF/VOF using parametric
@@ -63,7 +72,7 @@ close all; clear; clc;
 
 % NEEDS TO BE CHANGED EACH TIME
 % Patient ID (Set it to the folder id the data was found in)
-PatientID = '20011101';
+PatientID = '22490901';
 
 % ===========================
 % CHANGE ONCE (or if needed)
@@ -77,7 +86,7 @@ folder_extr = '/red/ruogu.fang/kylebsee/MAGIC/ct_extracted';
 folder_anno = '/red/ruogu.fang/kylebsee/MAGIC/ct_annotated';
 
 % Select your slice
-slice = 210;   % General slice for the ACA target
+slice = 165;   % General slice for the ACA target
 % slice = 123; % General slice for the A2 target
 
 % Select your AIF/VOF ROIs
@@ -94,6 +103,10 @@ roi_vof = [199,370,339,468];   % Small box around the SSS target
 
 % Figure window sizes
 fwindow = 'hpg';
+
+% Erosion radius
+eradius_aif = 15;
+eradius_vof = 5;
 
 % ===========================
 % ===========================
@@ -172,9 +185,36 @@ if strcmp(response,'Overwrite')
     lambda = 0.15;  %Truncation parameter
     m = 3;          %Extend the data matrix m time for block circulant
 
-    % Process CTP slice
+    % Process brain mask
     B = squeeze(mean(data(1:3,:,:),1));
-    mask = pct_brainMask(B,0,120,15);           % Compute brain mask (Req. signal and img toolbox)
+    mask = pct_brainMask(B,0,120,15);                           % Compute brain mask (Req. signal and img toolbox)
+    mask_erode_aif = imerode(mask,strel('disk',eradius_aif));   % High erosion mask to remove remaining skull
+    mask_erode_vof = imerode(mask,strel('disk',eradius_vof));   % Low erosion mask to remove remaining skull
+    halfsize = size(mask,1);
+    mask_erode_aif(halfsize/2:halfsize,:) = mask_erode_vof(halfsize/2:halfsize,:); % Apply VOF erosion on AIF erosion mask
+    mask = mask_erode_aif;
+
+    % Forced ROI Adjustment
+    [testy,testx] = ind2sub(size(mask),find(mask==1));  % Grab indices for all nonzero mask pixels
+    first_nonzero_row = min(testy); % Get first non-zero pixel row
+    last_nonzero_row = max(testy);  % Get last non-zero pixel row
+    first_nonzero_col = min(testx); % Get first non-zero pixel column
+    last_nonzero_col = max(testx);  % Get last non-zero pixel column
+    middle_col = last_nonzero_col-first_nonzero_col; % Get midline pixel
+
+    % Position AIF 20 pixels below the top-most pixel
+    roi_aif(2) = first_nonzero_row+20;  % Y1 of AIF ROI
+    roi_aif(4) = first_nonzero_row+130; % Y2 of AIF ROI
+    roi_vof(2) = last_nonzero_row-50;   % Y1 of VOF ROI
+    roi_vof(4) = last_nonzero_row+50;   % Y2 of VOF ROI
+
+    % Center VOF on the bottom-most pixel
+    roi_aif(1) = round(first_nonzero_col+(middle_col/2)-70); % X1 of AIF ROI
+    roi_aif(3) = round(first_nonzero_col+(middle_col/2)+70); % X2 of AIF ROI
+    roi_vof(1) = round(first_nonzero_col+(middle_col/2)-70); % X1 of VOF ROI
+    roi_vof(3) = round(first_nonzero_col+(middle_col/2)+70); % X2 of VOF ROI
+
+    % Process CTP slice
     data = pct_filter(data, fsize);             % Spatial filtering
     data = pct_gaussfilter(data,ftsize);        % Time filering
     data = pct_segment(data, loth, hith, PRE);  % Segmentation
