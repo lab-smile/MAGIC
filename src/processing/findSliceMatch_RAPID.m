@@ -6,7 +6,7 @@
 % Dr. Ruogu Fang
 % 10/18/2020
 %----------------------------------------
-% Last Updated: 11/10/2020 by GF
+% Last Updated: 11/1/2020 by GF
 % Create v4.
 % add gui and update selection methods
 %
@@ -19,7 +19,8 @@
 %for ONE modality of the maps files (length/4)
     %find the closest NCCT
     %find the matching slices from the other modalities
-    %segment tissue from NCCT and apply mask to CTP slices
+    %^^slice_num=length/4 * i + idx (for i=1:3, idx = idx between
+    %1,length/4)
     %name everything the same and save everything
     %increment slice idx
 %done!
@@ -31,10 +32,13 @@ clc; clear; close all; warning off;
 %datasetPath = 'C:/Users/gfullerton/Documents/REU/slicematch_testing/input/';
 %outputPath = 'C:/Users/gfullerton/Documents/REU/slicematch_testing/output4/';
 datasetPath = 'E:/IRB_RAPID_DEIDENTIFIED/';
-outputPath = 'C:/Users/gfullerton/Documents/REU/slicematch_rapid/';
+outputPath = 'C:/Users/gfullerton/Documents/REU/slicematch_rapid_stack_offset4/';
 
-addpath(genpath('C:/Users/gfullerton/Documents/REU/REU-main/scripts/'));
+addpath(genpath('C:/Users/gfullerton/Documents/REU/REU-main-2/REU/scripts/'));
 
+load('RAPID_U.mat');
+
+offset = 4; % integer greater than 0
 slice_threshold = 2;
 dsize = 7;
 ub = 200;
@@ -75,7 +79,7 @@ skip_idx = 1;
 
 subjects = dir(datasetPath);
 
-parfor j = startNum+2:length(subjects)
+for j = startNum+2:length(subjects)
     subject = subjects(j);
     subject_name = subject.name;
        
@@ -179,7 +183,7 @@ parfor j = startNum+2:length(subjects)
     
     % go through each map (one modality only in loop)
     %for i = 1:length(rCBV_zcoords)
-    for i = 4:length(rCBV_zcoords)-3 %this was done just so i only select the middle slices of the series
+    for i = 4:length(rCBV_zcoords)-3
         rCBV_z = rCBV_zs(i);
         
         rCBV_img = getCorrectImage(rCBV_zcoords,rCBV_z);
@@ -204,55 +208,100 @@ parfor j = startNum+2:length(subjects)
         
         [closest_val,idx] = min(abs(NCCT_zs-rCBV_z));
         closest_val = closest_val(1);
-        if closest_val >= slice_threshold, continue; end
-        NCCT_z = NCCT_zs(idx);
-        NCCT_name = NCCT_zcoords(NCCT_z);
-        NCCT_img = dicomread(NCCT_name); NCCT_info = dicominfo(NCCT_name);
-        NCCT_img = convert_DICOM_to_uint8(NCCT_img,NCCT_info); % converting DICOM to uint8
+        %if closest_val >= slice_threshold, continue; end
+        
+        NCCT_z_1 = NCCT_zs(idx-offset);
+        NCCT_z_2 = NCCT_zs(idx);
+        NCCT_z_3 = NCCT_zs(idx+offset);
+        NCCT_name_1 = NCCT_zcoords(NCCT_z_1);
+        NCCT_name_2 = NCCT_zcoords(NCCT_z_2);
+        NCCT_name_3 = NCCT_zcoords(NCCT_z_3);
+        NCCT_img_1 = dicomread(NCCT_name_1); NCCT_info_1 = dicominfo(NCCT_name_1);
+        NCCT_img_1 = convert_DICOM_to_uint8(NCCT_img_1,NCCT_info_1);
+        NCCT_img_2 = dicomread(NCCT_name_2); NCCT_info_2 = dicominfo(NCCT_name_2);
+        NCCT_img_2 = convert_DICOM_to_uint8(NCCT_img_2,NCCT_info_2);
+        NCCT_img_3 = dicomread(NCCT_name_3); NCCT_info_3 = dicominfo(NCCT_name_3);
+        NCCT_img_3 = convert_DICOM_to_uint8(NCCT_img_3,NCCT_info_3);
         
 %         figure; subplot(121);imshow(NCCT_img);
-        NCCT_img_store = NCCT_img; % remove skull region and eyes from NCCT images, just leave brain tissue
-        NCCT_mask = pct_brainMask_noEyes(NCCT_img, 0, ub, dsize);
-        NCCT_img(~NCCT_mask) = 0;
-        NCCT_mask2 = pct_brainMask_noEyes(NCCT_img, 0, ub, 4);
-        NCCT_img(~NCCT_mask2) = 0;
+        NCCT_img_store_1 = NCCT_img_1;
+        NCCT_mask_1 = pct_brainMask_noEyes(NCCT_img_1, 0, ub, dsize);
+        NCCT_img_1(~NCCT_mask_1) = 0;
+        NCCT_mask2_1 = pct_brainMask_noEyes(NCCT_img_1, 0, ub, 4);
+        NCCT_img_1(~NCCT_mask2_1) = 0;
+        
+        NCCT_img_store_2 = NCCT_img_2;
+        NCCT_mask_2 = pct_brainMask_noEyes(NCCT_img_2, 0, ub, dsize);
+        NCCT_img_2(~NCCT_mask_2) = 0;
+        NCCT_mask2_2 = pct_brainMask_noEyes(NCCT_img_2, 0, ub, 4);
+        NCCT_img_2(~NCCT_mask2_2) = 0;
+        
+        NCCT_img_store_3 = NCCT_img_3;
+        NCCT_mask_3 = pct_brainMask_noEyes(NCCT_img_3, 0, ub, dsize);
+        NCCT_img_3(~NCCT_mask_3) = 0;
+        NCCT_mask2_3 = pct_brainMask_noEyes(NCCT_img_3, 0, ub, 4);
+        NCCT_img_3(~NCCT_mask2_3) = 0;
 %         subplot(122); imshow(NCCT_img);
         
         % Reshape the NCCT image to have the same dimensions as perfusion
-        NCCT_img = imresize(NCCT_img,[256 256]);
+        NCCT_img_1 = imresize(NCCT_img_1,[256 256]);
+        NCCT_img_2 = imresize(NCCT_img_2,[256 256]);
+        NCCT_img_3 = imresize(NCCT_img_3,[256 256]);
+        
+        mask_fin = (NCCT_img_2 ~= 0);
+        NCCT_img_1(~mask_fin)=0;
+        NCCT_img_2(~mask_fin)=0;
+        NCCT_img_3(~mask_fin)=0;
+        
+        NCCT_img = cat(3, NCCT_img_1, NCCT_img_2, NCCT_img_3);
 
         saveName = strcat(subject_name(1:8),'_',num2str(slice_num),'.bmp');
        
-        mask_fin = (NCCT_img~=0);
+%         mask_fin_1 = (NCCT_img_1~=0);
+%         mask_fin_2 = (NCCT_img_2~=0);
+%         mask_fin_3 = (NCCT_img_3~=0);
+        %mask_fin = or(mask_fin_1,or(mask_fin_2,mask_fin_3));
+        
         MTT_img_fin = applyNCCTMask(MTT_img,mask_fin);
         rCBF_img_fin = applyNCCTMask(rCBF_img,mask_fin);
         rCBV_img_fin = applyNCCTMask(rCBV_img,mask_fin);
         TTP_img_fin = applyNCCTMask(TTP_img,mask_fin);
         
-        if all(NCCT_img(:)==0) % make sure that all the slices actually contain pixels before saving
+        if all(NCCT_img_1(:)==0) || all(NCCT_img_2(:)==0) || all(NCCT_img_3(:)==0)
             continue;
         elseif all(MTT_img_fin(:)==0) || all(rCBF_img_fin(:)==0) || all(rCBV_img_fin(:)==0) || all(TTP_img_fin(:)==0)
             continue;
         end
         
-        figure; movegui('north');
-        subplot(332);imshow(NCCT_img_store);title('NCCT');
-        subplot(334);imshow(MTT_img);title('MTT');subplot(336);imshow(rCBF_img);title('rCBF');
-        subplot(337);imshow(rCBV_img);title('rCBV');subplot(339);imshow(TTP_img);title('TTP');
-        
-        f=figure; movegui('south');
-        text_height = size(NCCT_img,1)+15;
-        subplot(321);imshow(NCCT_img_store);title('NCCT Before Crop');text(1,size(NCCT_img_store,1)+30,strcat('z-coordinate: ',num2str(NCCT_z)),'FontSize',8);
-        subplot(322);imshow(NCCT_img);title('NCCT After Crop');text(1,text_height,strcat('z-coordinate: ',num2str(NCCT_z)),'FontSize',8);
-        subplot(323);imshow(MTT_img_fin);title('MTT');text(1,text_height,strcat('z-coordinate: ',num2str(MTT_z)),'FontSize',8);
-        subplot(324);imshow(rCBF_img_fin);title('rCBF');text(1,text_height,strcat('z-coordinate: ',num2str(rCBF_z)),'FontSize',8);
-        subplot(325);imshow(rCBV_img_fin);title('rCBV');text(1,text_height,strcat('z-coordinate: ',num2str(rCBV_z)),'FontSize',8);
-        subplot(326);imshow(TTP_img_fin);title('TTP');text(1,text_height,strcat('z-coordinate: ',num2str(TTP_z)),'FontSize',8);
-        %save_check = input('Keep this file? (y/n): ','s');
+%         figure; movegui('north');
+%         subplot(331);imshow(NCCT_img_store_1);title('NCCT_1');subplot(331);imshow(NCCT_img_store_2);title('NCCT_2');
+%         subplot(333);imshow(NCCT_img_store_1);title('NCCT_3');
+%         subplot(334);imshow(MTT_img);title('MTT');subplot(336);imshow(rCBF_img);title('rCBF');
+%         subplot(337);imshow(rCBV_img);title('rCBV');subplot(339);imshow(TTP_img);title('TTP');
+%         
+%         f=figure; movegui('south');
+%         text_height = size(NCCT_img,1)+15;
+%         subplot(431);imshow(NCCT_img_store_1);title('NCCT_1 Before Crop');text(1,size(NCCT_img_store_1,1)+30,strcat('z-coordinate: ',num2str(NCCT_z_1)),'FontSize',8);
+%         subplot(432);imshow(NCCT_img_store_2);title('NCCT_2 Before Crop');text(1,size(NCCT_img_store_2,1)+30,strcat('z-coordinate: ',num2str(NCCT_z_2)),'FontSize',8);
+%         subplot(433);imshow(NCCT_img_store_3);title('NCCT_3 Before Crop');text(1,size(NCCT_img_store_3,1)+30,strcat('z-coordinate: ',num2str(NCCT_z_3)),'FontSize',8);
+% 
+%         subplot(434);imshow(NCCT_img_1);title('NCCT_1 After Crop');text(1,text_height,strcat('z-coordinate: ',num2str(NCCT_z_1)),'FontSize',8);
+%         subplot(435);imshow(NCCT_img_2);title('NCCT_2 After Crop');text(1,text_height,strcat('z-coordinate: ',num2str(NCCT_z_2)),'FontSize',8);
+%         subplot(436);imshow(NCCT_img_3);title('NCCT_3 After Crop');text(1,text_height,strcat('z-coordinate: ',num2str(NCCT_z_3)),'FontSize',8);
+% 
+%         subplot(437);imshow(MTT_img_fin);title('MTT');text(1,text_height,strcat('z-coordinate: ',num2str(MTT_z)),'FontSize',8);
+%         subplot(439);imshow(rCBF_img_fin);title('rCBF');text(1,text_height,strcat('z-coordinate: ',num2str(rCBF_z)),'FontSize',8);
+%         subplot(4,3,10);imshow(rCBV_img_fin);title('rCBV');text(1,text_height,strcat('z-coordinate: ',num2str(rCBV_z)),'FontSize',8);
+%         subplot(4,3,12);imshow(TTP_img_fin);title('TTP');text(1,text_height,strcat('z-coordinate: ',num2str(TTP_z)),'FontSize',8);
+%         save_check = input('Keep this file? (y/n): ','s');
         save_check = 'y';
         %close all;
         if contains(save_check,'y') || contains(save_check,'Y')
-            mask_fin = (NCCT_img ~= 0);
+            
+            rCBV_img_fin = uint8(rgb2values(rCBV_img_fin,Rapid_U,'gray'));
+            TTP_img_fin = uint8(rgb2values(TTP_img_fin,Rapid_U,'gray'));
+            rCBF_img_fin = uint8(rgb2values(rCBF_img_fin,Rapid_U,'gray'));
+            MTT_img_fin = uint8(rgb2values(MTT_img_fin,Rapid_U,'gray'));
 
             parsave(fullfile(rCBVPath, saveName), rCBV_img_fin);
             parsave(fullfile(TTPPath, saveName), TTP_img_fin);
@@ -260,8 +309,8 @@ parfor j = startNum+2:length(subjects)
             parsave(fullfile(MTTPath, saveName), MTT_img_fin);
             
             parsave(fullfile(NCCTsavePath, saveName), NCCT_img);
-            saveas(f,fullfile('C:/Users/gfullerton/Desktop/pics_new/',strcat(saveName,'.png')));
-            close all;
+            %saveas(f,fullfile('C:/Users/gfullerton/Desktop/pics_new/',strcat(saveName,'.png')));
+            %close all;
             slice_num=slice_num+1;
         end
     end
