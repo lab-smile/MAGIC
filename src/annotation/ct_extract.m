@@ -54,14 +54,18 @@ function [] = ct_extract(folder_deid,folder_extr,folder_anno)
 % - Changed variable names to folders instead of i/o
 % 
 % 3/22/23
+% - Changed which metadata was read to find temporal CT. Series number was
+%       changed to threshold instead of using a fixed number. Image
+%       comments were added to exclude sub-adv and stack. Inclusion of
+%       other scans does not hurt the integrity of the final output.
 % - Fixed an issue where missing folders are generated even when temporal
 %       data is found. This resulted in both a missing and data folder.
 
 %% Code
 % Testing settings. 
-% To test: Comment lines 1 & 198 | Uncomment lines 53-56
+% To test: Comment lines 1 & 217 | Uncomment lines 65-68
 % #########################################
-close all; clear; clc;
+% close all; clear; clc;
 % folder_deid = './testing_metadata_deid';
 % folder_extr = './testing_metadata_extr';
 % folder_anno = './testing_metadata_anno';
@@ -141,9 +145,8 @@ if ~isempty(dir_subj_deid)
                         info = [];
                         try
                             info = dicominfo(fullfile(dir_images(k).folder,dir_images(k).name));
-                            % Looking for series 3 and byte req. >20MB or
-                            % 2,000,000 bytes
-                            if info.SeriesNumber == 3 && dir_images(k).bytes > 20000000
+                            % Looking for series 3 and byte req. >30MB or 3,000,000 bytes
+                            if info.SeriesNumber == 3 && dir_images(k).bytes > 30000000
                                 % Save path and numbers
                                 shell_inputpath = dir_images(k).folder;
                                 shell_numbers = [shell_numbers; str2double(extractBefore(dir_images(k).name,'.dcm'))];

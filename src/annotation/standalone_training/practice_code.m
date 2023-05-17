@@ -41,18 +41,6 @@ folder_anno = './ct_annotated';
 slice = 165;   % General slice for the ACA target
 % slice = 123; % General slice for the A2 target
 
-% Select your AIF/VOF ROIs
-% [ X1, Y1, X2, Y2 ]
-
-% AIFs
-roi_aif = [199,110,339,220];   % Small box around the ACA target
-% roi_aif = [199,203,339,250]; % Tight box for A2 target (change slice too)
-% roi_aif = [1,1,512,256];     % Top 50% of image
-
-% VOFs
-roi_vof = [199,370,339,468];   % Small box around the SSS target
-% roi_vof = [1,256,512,512];   % Bottom 50% of image
-
 % Figure window sizes
 fwindow = 'hpg';
 
@@ -62,6 +50,12 @@ fwindow = 'hpg';
 %% Code
 
 % Size of temporal data is 512x512x320x21 - X,Y,Z,T
+
+% Initials check
+if strcmp(initials,'CHANGEME')
+    msgbox('Please change initials')
+    return
+end
 
 % Grab full ID
 dir_anno = dir(folder_anno); % Grab directory path 
@@ -85,9 +79,8 @@ end
 
 if strcmp(response,'Overwrite')
 
-    % Remove existing file
-    if exist(check_auto,'file'); delete(check_auto); end
-    if exist(check_manu,'file'); delete(check_manu); end
+    % Remove existing files
+    delete(fullfile(folder_anno,PatientID,'*'))
     
     % Set paths. Expecting relative paths.
     CTPToolbox = './utilities/pct';  % https://github.com/ruogufang/pct
@@ -155,8 +148,7 @@ if strcmp(response,'Overwrite')
     fprintf('--------- done --------\n');
 
 elseif strcmp(response,'Delete')
-    if exist(check_auto,'file'); delete(check_auto); end
-    if exist(check_manu,'file'); delete(check_manu); end
+    delete(fullfile(folder_anno,PatientID,'*'))
     fprintf("File deleted and skipping the annotation.\n")
     fprintf('--------- done --------\n');
     
