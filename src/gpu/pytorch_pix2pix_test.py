@@ -1,4 +1,4 @@
-import torch, network, argparse, os
+import torch, network, argparse, os, errno
 import matplotlib.pyplot as plt
 from torchvision import transforms
 from torch.autograd import Variable
@@ -24,8 +24,17 @@ transform = transforms.Compose([
 ])
 test_loader = util.data_load(opt.dataset, opt.test_subfolder, transform, batch_size=1, shuffle=False)
 
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python ≥ 2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 if not os.path.isdir(opt.dataset + '_results/test_results'):
-    os.mkdir(opt.dataset + '_results/test_results')
+    mkdir_p(opt.dataset + '_results/test_results')
     
 
 G = network.generator(opt.ngf,batch_size=opt.batch_size)
