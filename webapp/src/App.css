@@ -25,15 +25,6 @@ body {
   justify-content: space-between;
 }
 
-.right-side img {
-  width: 48%;
-  height: auto;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-
 .uploaded-image-container {
   margin-top: 20px;
   display: flex;
@@ -50,9 +41,28 @@ body {
   max-height: 200px;
 }
 
+.response-image-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f4f4;
+  border: 1px dashed #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.response-image {
+  max-width: 100%;
+  max-height: 200px;
+}
+
 form {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 input[type="file"] {
@@ -100,7 +110,33 @@ button:hover {
 
 .content {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+}
+
+.row {
+  display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.column {
+  flex: 1;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader {
+  border: 16px solid #f3f3f3;
+  border-top: 16px solid #3498db;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
 }
