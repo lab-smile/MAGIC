@@ -1,5 +1,28 @@
-input_path = fullfile('C:/Users/Garrett/Desktop/rapid_offset4_raw/');
-output_path = fullfile('C:/Users/Garrett/Desktop/rapid_offset4_combined_v4');
+%% Description
+% The current use of the code is to concatenate the NCCT and CTP maps into
+% a single 1x5 image. This image will be used for training and testing in
+% MAGIC. The input path expects an NCCT, MTT, TTP, rCBF, and rCBV folder,
+% each with a train, test, and val folder.
+% 
+% Input
+% |-- dataset
+%   |-- NCCT
+%     |-- train
+%       |-- 100001_1.bmp 
+%       |-- 100001_2.bmp
+%       |-- 100001_3.bmp
+%       |-- ...
+%     |-- val
+%       |-- 100002_1.bmp
+%       |-- 100002_2.bmp
+%       |-- ...
+%     |-- test
+%       |-- ...
+%   |-- rCBV
+%   |-- ...
+
+input_path = fullfile('D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output');
+output_path = fullfile('D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\newput');
 
 ncct_path = fullfile(input_path,'NCCT');
 mtt_path = fullfile(input_path,'MTT');

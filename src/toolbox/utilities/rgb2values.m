@@ -1,4 +1,5 @@
 function image_values = rgb2values(image, colormap, modality)
+% Apply and scale with different color tables.
 
 switch modality
     case 'CBF'
