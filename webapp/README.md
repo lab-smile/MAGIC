@@ -52,3 +52,20 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
+
+## Production Deployment
+
+### Compile MATLAB
+
+This step use mcc to package and deploy MATLAB program (standalone_generated_series.m) as standalone applications. 
+Run the following commands to compile the MATLAB program on HiperGator.
+
+```
+mkdir -p compile_generate_series && cd compile_generate_series
+
+module load matlab
+
+mcc -R -singleCompThread -m generate_series.m
+```
+
+### 
