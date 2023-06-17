@@ -18,6 +18,13 @@ def cleanup(tmp_dir, dir_hash):
     shutil.rmtree(generate_series_dir_path, ignore_errors=True)
 
 
+def cleanup_all(tmp_dir):
+    for dir_name in os.listdir(tmp_dir):
+        if dir_name.startswith("uploaded_"):
+            dir_path = os.path.join(tmp_dir, dir_name)
+            shutil.rmtree(dir_path, ignore_errors=True)
+
+
 class TemporaryWorkingDirectory:
     """
     A context manager that creates a hashed temporary working directory and clean up 10 minutes after use.

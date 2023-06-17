@@ -8,13 +8,18 @@ import io
 import subprocess
 import logging
 from logging.handlers import RotatingFileHandler
-from utils import TemporaryWorkingDirectory
+from utils import TemporaryWorkingDirectory, cleanup_all
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 CORS(app)
 
 # ENV_FILE is an environment variable that points to the environment file, e.g. development.py
 app.config.from_envvar('ENV_FILE')
+
+scheduler = BackgroundScheduler(daemon=True)
+scheduler.add_job(lambda: cleanup_all(app.config["IMAGES_TMP_DIR"]), 'interval', minutes=15)
+scheduler.start()
 
 # Configure logging
 logger = logging.getLogger(__name__)

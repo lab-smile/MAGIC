@@ -11,6 +11,7 @@ function App() {
   const [zoomIndex, setZoomIndex] = useState(-1);
   const [uploadedImageZoomed, setUploadedImageZoomed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -50,8 +51,26 @@ function App() {
       const response = await axios.post(`${baseUrl}/api/upload`, formData);
 
       setResponseImages(response.data.images);
+      setError(null);
     } catch (error) {
-      console.error('Error while uploading image:', error);
+      console.error(error);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+        setError(`Error while uploading image: ${error.response.status}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log(error.request);
+        setError(`Error while uploading image: No response from server.`);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log('Error', error.message);
+        setError(`Error while uploading image: ${error.message}`);
+      }
+
     } finally {
       setIsLoading(false); // set loading state to false, whether the request succeeded or failed
     }
@@ -76,6 +95,7 @@ function App() {
                 <button type="submit">Upload Image</button>
               </form>
           )}
+          {error && <div className="error">{error}</div>}
           {images && images.map((image, i) => (
               <div className="row" key={`row${i}`}>
                 <div className="column">
