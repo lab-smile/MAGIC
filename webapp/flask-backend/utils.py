@@ -4,6 +4,7 @@ import random
 import shutil
 import threading
 import time
+from PIL import Image
 
 
 def cleanup(tmp_dir, dir_hash):
@@ -59,3 +60,34 @@ class TemporaryWorkingDirectory:
         # Schedule cleanup
         cleanup_thread = threading.Thread(target=cleanup, args=(self.tmp_dir, self.dir_hash,))
         cleanup_thread.start()
+
+
+def resize_image(img):
+    """
+    The MAGIC model expects an input image of size 256x256. The reason being, each convolution layer with kernel size
+    4x4 and stride 2 is halving the dimensions of the image, and the eighth convolution layer (self.conv8_1) expects an
+    input of size 4x4.
+
+    This function takes an image of any size, and returns an image of size 256x256. The returned image is a 256x256
+    image with the original image pasted in the top left corner. The rest of the image is black.
+    """
+    # Resize the image to 256x256
+    img = img.resize((256, 256))
+
+    # 2. Generate another image of size 256x256 with black background
+    # Create a new blank image with width five times that of the resized image and the same height.
+    img_full = Image.new('RGB', (256 * 5, 256), 'black')
+
+    # Paste the resized image into the new image
+    img_full.paste(img, (0, 0))
+
+    # Create a black blank image of the same size as the original image
+    black_img = Image.new('RGB', (256, 256), 'black')
+
+    # Paste the black images into the new image
+    img_full.paste(black_img, (256, 0))
+    img_full.paste(black_img, (256 * 2, 0))
+    img_full.paste(black_img, (256 * 3, 0))
+    img_full.paste(black_img, (256 * 4, 0))
+
+    return img_full

@@ -8,7 +8,7 @@ import io
 import subprocess
 import logging
 from logging.handlers import RotatingFileHandler
-from utils import TemporaryWorkingDirectory, cleanup_all
+from utils import TemporaryWorkingDirectory, cleanup_all, resize_image
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
@@ -59,6 +59,8 @@ def upload_image():
             img_binary_data = io.BytesIO(base64.decodebytes(img_data))
             image = Image.open(img_binary_data)
 
+            image = resize_image(image)
+
             # Save the image to the unique directory
             filename = secure_filename(f'{key}.bmp')
             image.save(os.path.join(upload_dir, 'test', filename))
@@ -101,7 +103,7 @@ def upload_image():
 
         for i in range(len(request.form.keys())):
             # Image path
-            img_path = f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_generate_series_results/real/image{i}_Real.png'
+            img_path = f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_generate_series_results/fake/image{i}_Simulated.png'
 
             # Open the image file in binary mode, read it, and base64 encode its contents
             with open(img_path, 'rb') as f:
