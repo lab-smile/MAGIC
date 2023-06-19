@@ -19,11 +19,19 @@ def cleanup(tmp_dir, dir_hash):
     shutil.rmtree(generate_series_dir_path, ignore_errors=True)
 
 
-def cleanup_all(tmp_dir):
+def cleanup_all(tmp_dir, interval_secs=900):
+    current_time = time.time()
+
     for dir_name in os.listdir(tmp_dir):
         if dir_name.startswith("uploaded_"):
             dir_path = os.path.join(tmp_dir, dir_name)
-            shutil.rmtree(dir_path, ignore_errors=True)
+
+            # get the creation time of the directory
+            creation_time = os.path.getctime(dir_path)
+
+            # if the directory was created more than interval seconds ago, delete it
+            if current_time - creation_time > interval_secs:
+                shutil.rmtree(dir_path, ignore_errors=True)
 
 
 class TemporaryWorkingDirectory:

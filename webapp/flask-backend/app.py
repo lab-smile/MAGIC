@@ -18,7 +18,7 @@ CORS(app)
 app.config.from_envvar('ENV_FILE')
 
 scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(lambda: cleanup_all(app.config["IMAGES_TMP_DIR"]), 'interval', minutes=15)
+scheduler.add_job(lambda: cleanup_all(app.config["IMAGES_TMP_DIR"], interval_secs=15 * 60), 'interval', minutes=15)
 scheduler.start()
 
 # Configure logging
