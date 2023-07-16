@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from logger import create_logger
 from flask_cors import CORS, cross_origin
 from PIL import Image
 from werkzeug.utils import secure_filename
@@ -6,10 +7,9 @@ import os
 import base64
 import io
 import subprocess
-import logging
-from logging.handlers import RotatingFileHandler
 from utils import TemporaryWorkingDirectory, cleanup_all, resize_image
 from apscheduler.schedulers.background import BackgroundScheduler
+from postprocess import generate_series
 
 app = Flask(__name__)
 CORS(app)
@@ -21,18 +21,10 @@ scheduler = BackgroundScheduler(daemon=True)
 scheduler.add_job(lambda: cleanup_all(app.config["IMAGES_TMP_DIR"], interval_secs=15 * 60), 'interval', minutes=15)
 scheduler.start()
 
-# Configure logging
-logger = logging.getLogger(__name__)
-logger.setLevel(app.config['LOG_LEVEL'])
-# Creates a rotating file handler, rotates after 100MB and keeps 5 logs
-f_handler = RotatingFileHandler(f'{app.config["LOGS_DIR"]}/flask_server.log', maxBytes=100 * 1024 * 1024, backupCount=5)
-f_handler.setLevel(logging.INFO)
-# Create formatters and add it to handlers
-f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-f_handler.setFormatter(f_format)
-
-# Add handlers to the logger
-logger.addHandler(f_handler)
+logger = create_logger(
+    __name__,
+    f'{app.config["LOGS_DIR"]}/flask_server.log',
+)
 
 
 @app.route("/health", methods=["GET"])
@@ -83,22 +75,18 @@ def upload_image():
 
             logger.info(f"running postprocessing for {dir_hash}")
             # Run the second shell command with a specified current working directory
-            result = subprocess.run(
-                ['./run_generate_series.sh', app.config["MATLAB_RUNTIME_DIR"], f"{upload_dir}/test",
-                 f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_results/test_results',
-                 f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_generate_series_results',
-                 f'{app.config["PROJECT_DIR"]}/src/eval/Rapid_Colormap.mat'], check=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                cwd=app.config["MATLAB_DEPLOY_DIR"])
-
-            if result.returncode == 0:
-                logger.info(result.stdout.decode('utf-8'))
-            else:
-                logger.error(result.stderr.decode('utf-8'))
+            generate_series(
+                f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_results/test_results',
+                f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_generate_series_results',
+                f'{app.config["PROJECT_DIR"]}/src/eval/Rapid_Colormap.mat',
+            )
             logger.info(f"postprocessing completed for {dir_hash}")
         except subprocess.CalledProcessError as e:
             logger.error(e.output.decode('utf-8'))
             # If the subprocess returned an error, return a HTTP 500 response
+            return jsonify({"message": "Internal Server Error"}), 500
+        except Exception as e:
+            logger.error(e)
             return jsonify({"message": "Internal Server Error"}), 500
 
         for i in range(len(request.form.keys())):
