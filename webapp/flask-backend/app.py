@@ -33,6 +33,7 @@ def index():
     return jsonify({"message": "hello, world"})
 
 
+@app.route('/upload', methods=['POST'])
 @app.route('/api/upload', methods=['POST'])
 @cross_origin()
 def upload_image():
@@ -63,7 +64,7 @@ def upload_image():
             result = subprocess.run(
                 [f'{app.config["CONDA_ENV_ROOT"]}/bin/python',
                  f'{app.config["PROJECT_DIR"]}/src/gpu/pytorch_pix2pix_test.py',
-                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"]],
+                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num', "1"],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 check=True)
 

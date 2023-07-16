@@ -24,4 +24,5 @@ yarn-error.log*
 
 .idea/
 *.pyc
-node_modules
+node_modules/
+node-v*/
