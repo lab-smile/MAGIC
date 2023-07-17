@@ -66,16 +66,23 @@ def process_fake_file(fake_dir, fake_filename, fake_outpath, colormap):
 
     fig, axs = plt.subplots(2, 2)
 
-    axs[0, 0].imshow(imgA, cmap=colormap)
+    # By specifying vmin=0 and vmax=256, we're telling imshow to map the colormap so that 0 is mapped to the lowest
+    # color in the colormap and 256 is mapped to the highest color in the colormap.
+    #
+    # If vmin and/or vmax are not provided, imshow will use the minimum and maximum values in the data (in our case,
+    # the image array) to map the colormap. In other words, the lowest value in imgA/B/C/D data will correspond to the
+    # lowest color in the colormap and the highest value in imgA/B/C/D will correspond to the highest color in the
+    # colormap.
+    axs[0, 0].imshow(imgA, cmap=colormap, vmin=0, vmax=255)
     axs[0, 0].title.set_text('MTT')
 
-    axs[0, 1].imshow(imgB, cmap=colormap)
+    axs[0, 1].imshow(imgB, cmap=colormap, vmin=0, vmax=255)
     axs[0, 1].title.set_text('TTP')
 
-    axs[1, 0].imshow(imgC, cmap=colormap)
+    axs[1, 0].imshow(imgC, cmap=colormap, vmin=0, vmax=255)
     axs[1, 0].title.set_text('CBF')
 
-    axs[1, 1].imshow(imgD, cmap=colormap)
+    axs[1, 1].imshow(imgD, cmap=colormap, vmin=0, vmax=255)
     axs[1, 1].title.set_text('CBV')
 
     for ax in axs.flat:
@@ -128,6 +135,6 @@ def generate_series(datapath_fake, outpath, colormap_path):
 
 # generate_series(
 #     "/Users/yufeng/Desktop/test_images/uploaded_e1245b5465434a05eb1be48041df2cf8_results/test_results",
-#     "/Users/yufeng/Desktop/test_images/uploaded_e1245b5465434a05eb1be48041df2cf8_generate_series_results_3",
+#     "/Users/yufeng/Desktop/test_images/uploaded_e1245b5465434a05eb1be48041df2cf8_generate_series_results_4",
 #     "/Users/yufeng/research/smile/MAGIC/src/eval/Rapid_Colormap.mat"
 # )
