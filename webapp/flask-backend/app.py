@@ -59,12 +59,17 @@ def upload_image():
             image.save(os.path.join(upload_dir, 'test', filename))
 
         try:
-            logger.info(f"running model inference for {dir_hash}")
+            cmd = " ".join(
+                [f'{app.config["CONDA_ENV_ROOT"]}/bin/python',
+                 f'{app.config["PROJECT_DIR"]}/src/gpu/pytorch_pix2pix_test.py',
+                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num', f'{app.config["GPU_NUM"]}']
+            )
+            logger.info(f"running model inference for {dir_hash}: {cmd}")
             # Run the first shell command
             result = subprocess.run(
                 [f'{app.config["CONDA_ENV_ROOT"]}/bin/python',
                  f'{app.config["PROJECT_DIR"]}/src/gpu/pytorch_pix2pix_test.py',
-                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num', "1"],
+                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num', f'{app.config["GPU_NUM"]}'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 check=True)
 

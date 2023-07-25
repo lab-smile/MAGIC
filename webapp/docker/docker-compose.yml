@@ -1,0 +1,25 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: ../../
+      dockerfile: ./webapp/docker/backend/Dockerfile
+    image: magic-webapp-backend:1.0
+    command: /magic-web-backend-venv/bin/gunicorn -c gunicorn_config.py app:app
+    ports:
+      - "9701:9701"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+  frontend:
+    build:
+      context: ../../
+      dockerfile: ./webapp/docker/frontend/Dockerfile
+    image: magic-webapp-frontend:1.0
+    command: serve -s build
+    ports:
+      - "3000:3000"
