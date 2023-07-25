@@ -57,38 +57,49 @@ def process_fake_file(fake_dir, fake_filename, fake_outpath, colormap):
     imgC = rgb2gray(img[:, 2 * unit:3 * unit])
     imgD = rgb2gray(img[:, 3 * unit:4 * unit])
 
-    # Convert the image's numpy array of floats to a numpy array of unsigned integers that's same as
-    # what MATLAB's imread would return
+    # Convert the data to 8-bit format
     imgA = (imgA * 255).round().astype(np.uint8)
     imgB = (imgB * 255).round().astype(np.uint8)
     imgC = (imgC * 255).round().astype(np.uint8)
     imgD = (imgD * 255).round().astype(np.uint8)
 
-    fig, axs = plt.subplots(2, 2)
-
-    axs[0, 0].imshow(imgA, cmap=colormap)
-    axs[0, 0].title.set_text('MTT')
-
-    axs[0, 1].imshow(imgB, cmap=colormap)
-    axs[0, 1].title.set_text('TTP')
-
-    axs[1, 0].imshow(imgC, cmap=colormap)
-    axs[1, 0].title.set_text('CBF')
-
-    axs[1, 1].imshow(imgD, cmap=colormap)
-    axs[1, 1].title.set_text('CBV')
-
-    for ax in axs.flat:
-        ax.set_axis_off()
-
     savename = fake_filename.replace('_output', '').split('.')[0]
-    imgtitle = f'{savename}_Simulated'
-    fig.suptitle(imgtitle)
 
-    save_path = os.path.join(fake_outpath, f'{imgtitle}.png')
-    logger.info(f'Saving to {save_path}...')
-    plt.savefig(save_path, dpi=1024)
-    plt.close(fig)
+    plt.rcParams['savefig.dpi'] = 'figure'
+
+    with plt.style.context('dark_background'):
+        # Plot and save each image separately
+        plt.imshow(imgA, cmap=colormap)
+        plt.title('MTT')
+        plt.colorbar()
+        plt.axis('off')
+        save_path = os.path.join(fake_outpath, f'{savename}_Simulated_MTT.png')
+        plt.savefig(save_path)
+        plt.close()
+
+        plt.imshow(imgB, cmap=colormap)
+        plt.title('TTP')
+        plt.colorbar()
+        plt.axis('off')
+        save_path = os.path.join(fake_outpath, f'{savename}_Simulated_TTP.png')
+        plt.savefig(save_path)
+        plt.close()
+
+        plt.imshow(imgC, cmap=colormap)
+        plt.title('CBF')
+        plt.colorbar()
+        plt.axis('off')
+        save_path = os.path.join(fake_outpath, f'{savename}_Simulated_CBF.png')
+        plt.savefig(save_path)
+        plt.close()
+
+        plt.imshow(imgD, cmap=colormap)
+        plt.title('CBV')
+        plt.colorbar()
+        plt.axis('off')
+        save_path = os.path.join(fake_outpath, f'{savename}_Simulated_CBV.png')
+        plt.savefig(save_path)
+        plt.close()
 
 
 def generate_series(datapath_fake, outpath, colormap_path):

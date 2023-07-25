@@ -9,6 +9,7 @@ function App() {
   const [images, setImages] = useState(null);
   const [responseImages, setResponseImages] = useState([]);
   const [zoomIndex, setZoomIndex] = useState(-1);
+  const [zoomInnerIndex, setZoomInnerIndex] = useState(-1);
   const [uploadedImageZoomed, setUploadedImageZoomed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,13 +28,15 @@ function App() {
     Promise.all(readers).then(setImages);
   };
 
-  const handleImageClick = useCallback((index) => {
-    if (zoomIndex === index) {
+  const handleImageClick = useCallback((outerIndex, innerIndex) => {
+    if (zoomIndex === outerIndex && zoomInnerIndex === innerIndex) {
       setZoomIndex(-1);
+      setZoomInnerIndex(-1);
     } else {
-      setZoomIndex(index);
+      setZoomIndex(outerIndex);
+      setZoomInnerIndex(innerIndex);
     }
-  }, [zoomIndex]);
+  }, [zoomIndex, zoomInnerIndex]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -112,19 +115,19 @@ function App() {
                     </ControlledZoom>
                   </div>
                 </div>
-                {responseImages[i] && (
-                    <div className="column">
-                      <div className="response-image-container" onClick={() => handleImageClick(i)}>
+                {responseImages[i] && responseImages[i].map((responseImage, j) => (
+                    <div className="column" key={`response${j}`}>
+                      <div className="response-image-container" onClick={() => handleImageClick(i, j)}>
                         <ControlledZoom
-                            isZoomed={zoomIndex === i}
-                            onZoomChange={(isZoomed) => !isZoomed && setZoomIndex(-1)}
+                            isZoomed={zoomIndex === i && zoomInnerIndex === j}
+                            onZoomChange={(isZoomed) => !isZoomed && (setZoomIndex(-1), setZoomInnerIndex(-1))}
                             zoomMargin={10}
                         >
-                          <img src={responseImages[i]} alt={`Response ${i + 1}`} className="response-image"/>
+                          <img src={responseImage} alt={`Response ${i + 1}`} className="response-image"/>
                         </ControlledZoom>
                       </div>
                     </div>
-                )}
+                ))}
               </div>
           ))}
         </div>

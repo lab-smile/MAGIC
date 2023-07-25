@@ -62,14 +62,16 @@ def upload_image():
             cmd = " ".join(
                 [f'{app.config["CONDA_ENV_ROOT"]}/bin/python',
                  f'{app.config["PROJECT_DIR"]}/src/gpu/pytorch_pix2pix_test.py',
-                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num', f'{app.config["GPU_NUM"]}']
+                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num',
+                 f'{app.config["GPU_NUM"]}']
             )
             logger.info(f"running model inference for {dir_hash}: {cmd}")
             # Run the first shell command
             result = subprocess.run(
                 [f'{app.config["CONDA_ENV_ROOT"]}/bin/python',
                  f'{app.config["PROJECT_DIR"]}/src/gpu/pytorch_pix2pix_test.py',
-                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num', f'{app.config["GPU_NUM"]}'],
+                 '--dataset', upload_dir, '--model_path', app.config["MODEL_PATH"], '--gpu_num',
+                 f'{app.config["GPU_NUM"]}'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 check=True)
 
@@ -95,17 +97,22 @@ def upload_image():
             logger.error(e)
             return jsonify({"message": "Internal Server Error"}), 500
 
+        image_types = ["MTT", "TTP", "CBF", "CBV"]
+
         for i in range(len(request.form.keys())):
-            # Image path
-            img_path = f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_generate_series_results/fake/image{i}_Simulated.png'
+            image_set = []  # This will hold the four types of images for the current image
+            for img_type in image_types:
+                # Image path
+                img_path = f'{app.config["IMAGES_TMP_DIR"]}/uploaded_{dir_hash}_generate_series_results/fake/image{i}_Simulated_{img_type}.png'
 
-            # Open the image file in binary mode, read it, and base64 encode its contents
-            with open(img_path, 'rb') as f:
-                img_data = f.read()
-            img_str = base64.b64encode(img_data).decode()
+                # Open the image file in binary mode, read it, and base64 encode its contents
+                with open(img_path, 'rb') as f:
+                    img_data = f.read()
+                img_str = base64.b64encode(img_data).decode()
 
-            base64_images.append(f"data:image/png;base64,{img_str}")
+                image_set.append(f"data:image/png;base64,{img_str}")
 
+            base64_images.append(image_set)
         return jsonify({"images": base64_images})
 
 

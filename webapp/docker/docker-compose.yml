@@ -4,7 +4,7 @@ services:
     build:
       context: ../../
       dockerfile: ./webapp/docker/backend/Dockerfile
-    image: magic-webapp-backend:1.0
+    image: magic-webapp-backend:1.1
     command: /magic-web-backend-venv/bin/gunicorn -c gunicorn_config.py app:app
     ports:
       - "9701:9701"

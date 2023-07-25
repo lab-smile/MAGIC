@@ -12,8 +12,8 @@ FROM nvidia/cuda:11.7.1-devel-ubuntu20.04 AS BUILD_CONDA_ENV
 COPY --from=CONDA_INSTALL /usr/local/conda /usr/local/conda
 ENV PATH /usr/local/conda/bin:$PATH
 RUN echo "channels:\n  - defaults\n  - conda-forge" > ~/.condarc
-COPY /src /src
-WORKDIR /src/hpg
+COPY /src/hpg /hpg
+WORKDIR /hpg
 RUN conda env create -f magic_env.yml
 
 FROM nvidia/cuda:11.7.1-devel-ubuntu20.04 AS RUNTIME
