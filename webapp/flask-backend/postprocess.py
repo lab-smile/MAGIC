@@ -69,33 +69,37 @@ def process_fake_file(fake_dir, fake_filename, fake_outpath, colormap):
 
     with plt.style.context('dark_background'):
         # Plot and save each image separately
-        plt.imshow(imgA, cmap=colormap)
+        plt.imshow(imgA, cmap=colormap, vmin=0, vmax=12)
         plt.title('MTT')
         plt.colorbar()
+        plt.imshow(imgA, cmap=colormap)
         plt.axis('off')
         save_path = os.path.join(fake_outpath, f'{savename}_Simulated_MTT.png')
         plt.savefig(save_path)
         plt.close()
 
-        plt.imshow(imgB, cmap=colormap)
+        plt.imshow(imgB, cmap=colormap, vmin=0, vmax=25)
         plt.title('TTP')
         plt.colorbar()
+        plt.imshow(imgB, cmap=colormap)
         plt.axis('off')
         save_path = os.path.join(fake_outpath, f'{savename}_Simulated_TTP.png')
         plt.savefig(save_path)
         plt.close()
 
-        plt.imshow(imgC, cmap=colormap)
+        plt.imshow(imgC, cmap=colormap, vmin=0, vmax=60)
         plt.title('CBF')
         plt.colorbar()
+        plt.imshow(imgC, cmap=colormap)
         plt.axis('off')
         save_path = os.path.join(fake_outpath, f'{savename}_Simulated_CBF.png')
         plt.savefig(save_path)
         plt.close()
 
-        plt.imshow(imgD, cmap=colormap)
+        plt.imshow(imgD, cmap=colormap, vmin=0, vmax=4)
         plt.title('CBV')
         plt.colorbar()
+        plt.imshow(imgD, cmap=colormap)
         plt.axis('off')
         save_path = os.path.join(fake_outpath, f'{savename}_Simulated_CBV.png')
         plt.savefig(save_path)
@@ -136,9 +140,3 @@ def generate_series(datapath_fake, outpath, colormap_path):
             process_fake_file(datapath_fake, fake_filename, fake_outpath, cmap_Rapid_U)
 
     logger.info(f"Postprocessing {datapath_fake} using colormap at {colormap_path}...Done!")
-
-# generate_series(
-#     "/Users/yufeng/Desktop/test_images/uploaded_e1245b5465434a05eb1be48041df2cf8_results/test_results",
-#     "/Users/yufeng/Desktop/test_images/uploaded_e1245b5465434a05eb1be48041df2cf8_generate_series_results_3",
-#     "/Users/yufeng/research/smile/MAGIC/src/eval/Rapid_Colormap.mat"
-# )
