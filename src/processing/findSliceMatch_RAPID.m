@@ -1,3 +1,4 @@
+function [] = findSliceMatch_RAPID(datasetPath,outputPath)
 %% Match NCCT and CTP Perfusion Map Slices
 % This is the main function for matching NCCT and CTP perfusion map slices.
 % This function requires that the dataset contain NCCT and Perfusion Map
@@ -6,18 +7,32 @@
 %   - Aggregate all NCCT and Perfusion Map slices
 %   - List out all z-locations from slices
 % 
+% NCCT expected at 1.0mm resolution with 160 slices. Z coordinates are
+% taken from NCCT and each CTP slice. CTP slices are matched within 2mm of
+% NCCT z slice. Two slices offset from main NCCT slice are also taken and
+% stacked together.
+% 
 %   Garrett Fullerton 10/18/2020
 %   Smart Medical Informatics Learning and Evaluation (SMILE) Laboratory
 %   Biomedical Engineering
 % 
+%   Input:
+%       datasetPath   - Path to input folder containing deid subjects
+%       outputPath    - Path to output folder
+% 
 %----------------------------------------
-% Last Updated: 11/1/2020 by GF
+% Last Updated: 5/26/2023 by KS
 % Create v4.
 % add gui and update selection methods
 %
+% 8/21/2023 by KS
+% - Changed script into a function.
+% - Adjusted printing text.
+% 
 % 5/26/2023 by KS
 % - Added comments and description
 % - Added a function to fix multiple study folders by combining them
+% - Added a function to fix multiple series folders by combining them
 % - Changed some variable names to be more intuitive
 % - Fixed missing local function "getCorrectImage"
 % - Changed paths of utilities from absolute to relative
@@ -39,18 +54,22 @@
     %increment slice idx
 %done!
 
-%% Setup
+%% Adjustable Variables
 %#########################################
-clc; clear; close all; warning off;
+% clc; clear; close all; warning off;
 % Input folder - folders must follow the order
 % > Subject -> Study -> Session -> Image
-datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\input_newsmall';
-
+% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\input_small';
 % Output folder - will be created
-outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output_newsmall';
+% outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output_small';
 %#########################################
 
+fprintf("Starting...findSliceMatch_RAPID.m\n")
+fprintf("------------------------------------------------------------------\n")
+
+% Fix any issues with study or series folders
 fixStudy(datasetPath)
+fixSeries(datasetPath)
 
 % Add utilities
 addpath('../toolbox/utilities')
@@ -58,7 +77,7 @@ addpath('../toolbox/utilities')
 % What is this? It is 3-columns with values in them.
 % This is a colormap
 % load('RAPID_U.mat'); % Found in /src/toolbox/roi_performance
-load('D:\Desktop Files\Dropbox (UFL)\Github\MAGIC\src\toolbox\roi_performance\RAPID_U.mat')
+load('../toolbox/roi_performance/RAPID_U.mat','Rapid_U')
 
 NCCT_slice_offset = 4; % integer greater than 0 - How many slices to offset from the main NCCT slice
 match_threshold = 2; % Maximum threshold for finding matching Perfusion map slice 
@@ -70,7 +89,7 @@ save_check = 'y'; % Save or not
 % This file contains text MTT_test, TTP_test, rCBF_test, and rCBV_test.
 % These files are pictures of the the corresponding words. These are used
 % to determine which image belongs to which perfusion map.
-load('RAPIDModalities.mat');
+load('RAPIDModalities.mat','MTT_test','TTP_test','rCBF_test','rCBV_test');
 
 if ~exist(fullfile(outputPath),'dir'), mkdir(fullfile(outputPath)); end
 
@@ -247,7 +266,7 @@ for j = startNum+2:length(subjects)
 
     end
     if checkOutput == total_slices*5
-        fprintf("Subject %s already processed\n",subject_name)
+        fprintf("> Subject %s already processed\n",subject_name)
         continue;
     end
         
@@ -373,9 +392,13 @@ for j = startNum+2:length(subjects)
             slice_num=slice_num+1;
         end
     end
-    fprintf('----------Finished with subject %s----------\n',subject_name);
+    fprintf('> Finished with subject %s\n',subject_name);
 end
-disp('-------------------------Finished with all------------------------');
+fprintf("------------------------------------------------------------------\n")
+fprintf("Finished...findSliceMatch_RAPID.m\n")
+fprintf("------------------------------------------------------------------\n")
+
+end
 
 %% Local Functions
 function FINAL_img = getCorrectImage(MODALITY_zcoords,TEST_IMG)

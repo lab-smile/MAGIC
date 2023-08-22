@@ -18,18 +18,14 @@
 - `getmetrics.ipynb` Updated SSIM from skimage. skimage.measure.compare_ssim --> skimage.metrics.structural_similarity.
 - `getmetrics.ipynb` Updated MSE from skimage. skimage.measure.compare_mse --> skimage.metrics.mean_squared_error
 
-### Deprecated
-- `
+### Fixed
+- `fixStudy.m` Resolved an issue where there is a slight difference (WO- between two similar study folders. Added a new condition for comparison for CTA folder.
+- `fixSeries.m` Adjusted print confirming no issues were found.
+- `pytorch_pix2pix_test.py` Replaced os.mkdirs with os.makedirs to handle intermediate directory creation.
 
 ### Removed
 - `generated_combined_fig.m` Removed handel
 - `generate_fake_real_folder.m` No longer displays figure for each saved image.
-
-### Fixed
-- `fixStudy.m` Resolved an issue where there is a slight difference, "WO-" and "WO_", between two similar study folders. Added a new condition for comparison for CTA folder.
-- `fixSeries.m` Adjusted print confirming no issues were found.
-- `pytorch_pix2pix_test.py` Replaced os.mkdirs with os.makedirs to handle intermediate directory creation.
-
 
 ## [0.0.0] - 2023-05-26
 ### Added

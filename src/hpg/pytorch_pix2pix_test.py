@@ -23,9 +23,10 @@ transform = transforms.Compose([
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ])
 test_loader = util.data_load(opt.dataset, opt.test_subfolder, transform, batch_size=1, shuffle=False)
+results_folder = opt.dataset + '_results'
 
-if not os.path.isdir(opt.dataset + '_results/test_results'):
-    os.mkdir(opt.dataset + '_results/test_results')
+if not os.path.isdir(results_folder):
+    os.makedirs(results_folder)
     
 
 G = network.generator(opt.ngf,batch_size=opt.batch_size)
@@ -65,7 +66,7 @@ with torch.no_grad():
       s_ind = len(s) - s.find('/')
       e_ind = len(s) - s.find('.')
       ind = test_loader.dataset.imgs[n][0][s_ind:e_ind-1]
-      path = opt.dataset + '_results/test_results/' + ind + '_output.png'
+      path = results_folder + '/' + ind + '_output.png'
       testimg = test_image[0].cpu().data.numpy().squeeze()
       img = (np.stack((testimg,)*3,0).transpose(1, 2, 0) + 1) / 2
 

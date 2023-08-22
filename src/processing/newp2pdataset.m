@@ -1,3 +1,4 @@
+function [] = newp2pdataset(input_path,output_path)
 %% Description
 % The current use of the code is to concatenate the NCCT and CTP maps into
 % a single 1x5 image. This image will be used for training and testing in
@@ -21,8 +22,15 @@
 %   |-- rCBV
 %   |-- ...
 
-input_path = fullfile('D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output');
-output_path = fullfile('D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\newput');
+%% Adjustable Variables
+% #########################################
+% close all; clear; clc;
+% input_path = fullfile('D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output');
+% output_path = fullfile('D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\newput');
+% #########################################
+
+fprintf("Starting...newp2pdataset.m\n")
+fprintf("------------------------------------------------------------------\n")
 
 ncct_path = fullfile(input_path,'NCCT');
 mtt_path = fullfile(input_path,'MTT');
@@ -76,8 +84,14 @@ for i = 1:3
         fprintf('Done saving %s\n', filename);
     end
 end
-disp('All done!');
 
+fprintf("------------------------------------------------------------------\n")
+fprintf("Finished...newp2pdataset.m\n")
+fprintf("------------------------------------------------------------------\n")
+
+end
+
+%% Local Functions
 function fixed_img = fix_img(orig_img)
 fixed_img = orig_img;
 if ndims(fixed_img) == 2

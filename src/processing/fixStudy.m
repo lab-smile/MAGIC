@@ -20,8 +20,8 @@ function [] = fixStudy(datasetPath)
 % Testing settings
 % To test: Comment function. | Uncomment lines between hash below
 % #########################################
-% clc;clear;close all; warning off;
-% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fixStudy_input';
+% clc;clear; close all; warning off;
+% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fix';
 % #########################################
 
 % Get directory containing all subjects
@@ -45,12 +45,12 @@ for i = 3:length(subjects)
         merge_flag = 1;
         % Start 3 to skip hidden dir . and ..
         for j = 3:length(dir_study)
-            if contains(dir_study(j).name,'CTA') % Gets the CTA folder name
+            if contains(dir_study(j).name,'CTA') && contains(dir_study(j).name,'WO-') % Gets the CTA folder name
                 cta_folder = dir_study(j).name;
             elseif contains(dir_study(j).name,'data_summary') % Skip data summary
                 continue;
             else % Get extra folder name
-                fprintf("Other folder detected in %s: %s\n",subject_name,dir_study(j).name)
+                fprintf("Folder detected in %s: %s\n",subject_name,dir_study(j).name)
                 extra_folder = dir_study(j).name;
             end
         end
@@ -58,7 +58,7 @@ for i = 3:length(subjects)
         dir_extra = dir(fullfile(datasetPath,subject_name,extra_folder));
         fprintf("Merging %d files\n",length(dir_extra)-2)
         
-        % Move all files to CTA folder
+        % Move all files to CTA folder from extra directory
         for k = 3:length(dir_extra)
            file_input = fullfile(datasetPath,subject_name,extra_folder,dir_extra(k).name);
            file_output = fullfile(datasetPath,subject_name,cta_folder,dir_extra(k).name);
@@ -67,7 +67,20 @@ for i = 3:length(subjects)
         
         % Remove extra folder
         extra_folder_path = fullfile(datasetPath,subject_name,extra_folder);
-        rmdir(extra_folder_path)
+        try
+            rmdir(extra_folder_path)
+        catch
+            fprintf("Failed to empty extra folder.\n")
+            fprintf("Retrying move.\n")
+            dir_extra = dir(fullfile(datasetPath,subject_name,extra_folder));
+            for k = 3:length(dir_extra)
+               file_input = fullfile(datasetPath,subject_name,extra_folder,dir_extra(k).name);
+               file_output = fullfile(datasetPath,subject_name,cta_folder,dir_extra(k).name);
+               movefile(file_input,file_output)
+            end
+            rmdir(extra_folder_path)
+        end
+            
         fprintf("Merge complete. Extra folder deleted.\n")
     end
 end
