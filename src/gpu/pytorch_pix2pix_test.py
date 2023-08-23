@@ -1,4 +1,4 @@
-import torch, network, argparse, os
+import torch, network, argparse, os, errno
 import matplotlib.pyplot as plt
 from torchvision import transforms
 from torch.autograd import Variable
@@ -14,6 +14,7 @@ parser.add_argument('--save_root', required=False, default='results', help='resu
 parser.add_argument('--scale', required=False, default=0.5, help='scale factor for PILO parameter')
 parser.add_argument('--batch_size', required=False, default=16, type=int)
 parser.add_argument('--model_path', help='path to generator PKL file')
+parser.add_argument('--gpu_num', type=int, nargs='?', default=0, help='The GPU to be used. Default is GPU0')
 opt = parser.parse_args()
 print(opt)
 
@@ -24,14 +25,24 @@ transform = transforms.Compose([
 ])
 test_loader = util.data_load(opt.dataset, opt.test_subfolder, transform, batch_size=1, shuffle=False)
 
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python ≥ 2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 if not os.path.isdir(opt.dataset + '_results/test_results'):
-    os.mkdir(opt.dataset + '_results/test_results')
+    mkdir_p(opt.dataset + '_results/test_results')
     
 
+device = torch.device(f'cuda:{opt.gpu_num}')
 G = network.generator(opt.ngf,batch_size=opt.batch_size)
 print(G)
-G.cuda()
-G.load_state_dict(torch.load(opt.model_path))
+G = G.to(device)
+G.load_state_dict(torch.load(opt.model_path, map_location=device))
 G.eval()
 
 # set scale to 0.5 if no PILO scaling
@@ -57,8 +68,8 @@ with torch.no_grad():
   for item, _ in test_loader:
       img_size = 256
       x_ = item[:, :, :, 0:img_size] # NCCT
-  
-      x_ = Variable(x_.cuda())
+
+      x_ = Variable(x_.to(device))
       test_image = G(x_)
       
       s = test_loader.dataset.imgs[n][0][::-1]
