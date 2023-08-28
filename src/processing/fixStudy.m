@@ -25,7 +25,10 @@ function [] = fixStudy(datasetPath)
 % #########################################
 
 % Get directory containing all subjects
+flagPath = fullfile(datasetPath,'completed');
+if ~exist(flagPath,'dir'), mkdir(flagPath); end
 subjects = dir(datasetPath);
+subjects(end) = [];
 
 % Determines print output
 merge_flag = 0;

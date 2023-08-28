@@ -2,11 +2,34 @@
 ### Added
 - New `legacy` folder will now contain scripts and files that are no longer used.
 - New `misc` folder will contain non-script files including .csv and .xlsx files.
+- `pytorch_pix2pix.py` Now has tqdm to track training progress.
+- `pytorch_pix2pix.py` Now has extensive comments and section numbers.
+- `pytorch_pix2pix_test.py` Now checks to make sure batch size is less than the test loader size.
 
 ### Changed
+- `generate_fake_real_folder.m` Reads .png instead of .bmp
+- `findSliceMatch_RAPID.m` Saves .png instead of .bmp
+- `findSliceMatch_RAPID.m` A flag system using empty .txt files is now used to track progress, instead of checking for multiple instances of partitioned data within each modality.
+- `newp2pdataset.m` Reads .png instead of .bmp
 - `applyImageDenoising.m` Moved from processing to eval.
 - `calculate_dice.m` Moved from toolbox/utilities to toolbox/isles.
+- `pytorch_pix2pix.py` Adjusted multiple argument names and default values.
+    - `--ngf` Added help description
+    - `--ndf` Added help description
+    - `--model_name` New argument to handle model name instead of using `--dataset`.
+    - `--num_workers` 2 --> 1
+    - `--save_fig_freq` 5 --> 10
+    - `--test_subfolder` --> `--val_subfolder`
+    - `--test_batch_size` --> `--val_batch_size`
+- `pytorch_pix2pix_test.py` Adjusted default values and requirements.
+    - `--batch_size` 16 --> 1
+    - `--dataset`, `--model_path`, and `--save_root` are now required.
 - All .csv and .xlsx files found in utilities moved to misc folder.
+- Renamed readme files.
+    - `ReadMe_GPU version.md` --> `README_GPU.md`
+    - `README_withDocker.md` --> `README_Docker.md`
+    - `PrivateREADME.md --> README_Private.md`
+- `README.md` Updated and reorganized contents.
 
 ### Deprecated
 - `applyaugs.m` Moved to legacy.
@@ -19,7 +42,15 @@
 - `reorganize_files.m` Moved to legacy.
 - `rgb2v_iterative_deepending.m` Moved to legacy.
 - All `di_...` deidentification files are moved to legacy.
+- `README_withoutHPG.md` Moved to misc. Provides same information in `README.md`
 
+### Fixed
+- `fixStudy.m` Resolved an issue where merging was attempted on the completed flag folder.
+- `fixSeries.m` Resolved an issue where merging was attempted on the completed flag folder.
+- `findSliceMatch_RAPID.m` Resolved an issue where the index for NCCT slice is exceeded.
+- `findSliceMatch_RAPID.m` Resolved an issue where the index for NCCT slice is undercut.
+- `findSliceMatch_RAPID.m` Resolved an issue with selecting from multiple NCCT modalities. The NCCT keyword is prioritized first, then other filenames, and lastly summary files.
+- `pytorch_pix2pix.py` Resolved an issue which could not handle relative pathing.
 
 
 ## [0.0.1] - 2023-08-22

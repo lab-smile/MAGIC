@@ -38,7 +38,7 @@ if ~exist(realpath,'dir'), mkdir(realpath); end
 if ~exist(ncctpath,'dir'), mkdir(ncctpath); end
 
 fake_files = dir(fullfile(datapath_fake,'*.png'));
-real_files = dir(fullfile(datapath_real,'*.bmp'));
+real_files = dir(fullfile(datapath_real,'*.png'));
 %%
 for i = 1:length(fake_files)
     file = fake_files(i);

@@ -25,7 +25,10 @@ function [] = fixSeries(datasetPath)
 % #########################################
 
 % Get directory containing all subjects
+flagPath = fullfile(datasetPath,'completed');
+if ~exist(flagPath,'dir'), mkdir(flagPath); end
 subjects = dir(datasetPath);
+subjects(end) = [];
 
 % Loops through all subjects
 for i = 3:length(subjects)

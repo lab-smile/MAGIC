@@ -58,7 +58,7 @@ for i = 1:length(images)
     imgname_fake = img.name;
     if strcmp(imgname_fake(1),'.'), continue; end
     imgname_real = strrep(imgname_fake,'_output','');
-    imgname_real = strrep(imgname_real,'.png','.bmp');
+%     imgname_real = strrep(imgname_real,'.png','.bmp');
     
     fake_img = imread(fullfile(img.folder,imgname_fake));
     real_img = imread(fullfile(real_img_folder,imgname_real));

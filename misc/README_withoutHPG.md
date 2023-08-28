@@ -1,15 +1,10 @@
-# Multitask, Automated Generation of Intermodal CT Perfusion Maps (MAGIC) via Generative Adversarial Networks
+## Training Instruction
+# MAGIC: Multitask, Automated Generation of Intermodal CT Perfusion Maps via Generative Adversarial Networks
+## _Smart Medical Informatics Learning & Evaluation Laboratory, Dept. of Biomedical Engineering, University of Florida_
 
-Developed by the Smart Medical Informatics Learning & Evaluation (SMILE) Laboratory, Dept. of Biomedical Engineering, University of Florida. 
-- Originally created by Garrett Fullerton and Simon Kato.
-- Under the supervision of Ruogu Fang, Ph.D.
-- Currently maintained by Kyle See.
+MAGIC is a novel, multitask deep network architecture that enables translation from noncontrast-enhanced CT imaging to CT perfusion imaging. This framework enables the contrast-free synthesis of perfusion imaging of the brain, and it is generalizable to other modalities of imaging as well.
 
-## About MAGIC
-MAGIC is a novel, multitask deep network architecture that enables translation from non-contrast enhanced CT imaging to CT perfusion imaging maps. **This framework enables the synthesis of contrast-free perfusion imaging of the brain**. It is generalizable to other modalities of imaging as well.
-
-The novelties of this framework for the synthesis of contrast-free perfusion imaging, in comparison to other modern image-to-image architectures, are as follows: 
-
+The novelties of this framework for the contrast-free synthesis of perfusion imaging, in comparison to other modern image-to-image architectures, are as follows: 
 - No existing framework to enable contrast-free perfusion imaging
 - Physiologically-informed loss terms
 - Multitask, simultaneous generation of four CTP maps 
@@ -19,49 +14,20 @@ The novelties of this framework for the synthesis of contrast-free perfusion ima
 - Generalizable to any additional perfusion maps
 - Physicians-in-the-Loop Module
 
-## Model Architectures
 
-*Note: The pretrained MAGIC Generator is not publicly available. Any requests to access the pretrained model should be directed to [Kyle See](mailto:kylebsee@ufl.edu).*
+## Generator & Discriminator Architectures
+
+*Note: The pretrained MAGIC Generator is _not_ publicly available. Any requests to access the pretrained model should be directed to [Garrett Fullerton](mailto:gfullerton@ufl.edu).*
 
 The generator and discriminator networks can be found in [network.py](src/hpg/network.py). 
 
 ### Generator
-
-The generator for MAGIC is a novel network architecture that was inspired by the popular _pix2pix_ network architecture, originally proposed an described by [_Isola, 2017_](https://arxiv.org/abs/1611.07004). The network accepts a [3x256x256] noncontrast enhanced CT pseudo-RGB input. The pseudo-RGB characteristic comes from the slice-stacking method used in preprocessing the data. The first four layers of the generator are simple encoding layers comprised of convolution layers. These are followed by batch normalization and leaky ReLU activation layers. This is referred to as the "Backbone Generator". The network diverges into 4 unique paths from the fifth layer, corresponding to each of the perfusion modalities. A series of transposed convolution layers are then used to upscale the encoded image at each pathway, which produces a final predicted perfusion series output. The generator's architecture is shown in greater detail in the figure below. 
-
-<p align="center">
-  <img src="images/generator.png">
-</p>
+The generator for MAGIC is a novel network architecture that was inspired by the popular _pix2pix_ network architecture, originally proposed an described by [_Isola, 2017_](https://arxiv.org/abs/1611.07004). The network accepts a [3x256x256] noncontrast enhanced CT pseudo-RGB input, where the pseudo-RGB characteristic comes from the slice-stacking method used in preprocessing the data. The first 4 layers of the generator are simple encoding layers, comprised of convolution layers followed by batch normalization and leaky ReLU activation layers. From the fifth layer, the network diverges into 4 unique paths, corresponding to one of the perfusion modalities. A series of transposed convolution layers are then used to upscale the encoded image at each pathway, which produces a final predicted perfusion series output. The generator's architecture is shown in greater detail in the figure below. 
+![](https://github.com/lab-smile/MAGIC/blob/main/images/generator.png?raw=true)
 
 ### Discriminator
-
 The discriminator utilizes a relatively simple _PatchGAN_ framework with a 70x70 pixel field of view. This method is originally proposed and described by [_Isola, 2018_](https://arxiv.org/abs/1611.07004v3). We utilize a binary cross entropy loss on the predicted labels for each synthesized and ground truth perfusion slice that the discriminator creates a prediction for. The discriminator's architecture is shown in the figure below.
-
-<p align="center">
-  <img src="images/discriminator.png">
-</p>
-
-## Pipeline Overview
-
-The MAGIC pipeline includes dataset processing, model training and validation, and model evaluation. Dataset processing is <u>***currently only capable of handling UF Health data***</u> that has been deidentified using the [DICOM-Deidentification](https://github.com/lab-smile/DICOM-Deidentification) toolbox. Other datasets may be used but will require specific preparation. The input format of MAGIC is described in the [Dataset Processing](#dataset-processing) below.
-
-We provide a small sample training and testing set for 
-
-### Requirements
-
-MATLAB code is known to work with MATLAB 2019b+
-
-### Dataset Processing
-
-The MAGIC pipeline takes a very
-
-- [findSliceMatch_RAPID.m](src/processing/findSliceMatch_RAPID.m)  
-- [splitData.m](src/processing/splitData.m)
-- [newp2pdataset.m](src/processing/newp2pdataset.m)
-
-### Model Training
-
-### Evaluation
+![](https://github.com/lab-smile/MAGIC/blob/main/images/discriminator.png?raw=true)
 
 ## Sample Dataset
 We provide a small sample training set for evaluation and introduction to this project's code. This can be found in [rapid_set_split_small](src/sample/). Contained in this dataset are two subfolders, for training and testing a model. The [training set](src/sample/train) contains 48 samples, and the [testing set](src/sample/test) contains 10 samples. The original MAGIC model was trained on over 16,000+ individual samples, but this sample set illustrates the program's functionality.
@@ -69,12 +35,11 @@ We provide a small sample training set for evaluation and introduction to this p
 Each data sample has been preprocessed using our [newp2pdataset.m](src/preprocessing/newp2pdataset.m) script to put the grayscale image data in a 1280x256 format. Each sample contains 5 images, each corresponding to a different modality. This is illustrated in the image below. From left to right, the image in each data sample are noncontrast CT, mean transit time (MTT), time-to-peak (TTP), cerebral blood flow (CBF), and cerebral blood volume (CBV). These 5 paired slices are put together in the same image file for the ease of loading data in while training our model. An example of a input sample is shown in the figure below.
 ![](https://github.com/lab-smile/MAGIC/blob/main/images/trainsample1.png?raw=true)
 
-### 1. System Requirements
+### System Requirements
 We recommend using the Linux operating system. All listed commands in this part are based on the Linux operation system. We highly recommend using a GPU system for computation, but these code and directions are compatible with CPU only. 
 
-We used Linux (GNU/Linux 3.10.0-1062.18.1.el7.x86_64) and an NVIDIA TITAN X GPU with CUDA version 7.6.5.
-
-### 2. Environment setup and Installation
+We used Linux (GNU/Linux 3.10.0-1062.18.1.el7.x86_64) and an NVIDIA TITAN X GPU with CUDA version 7.6.5. 
+### Environment setup and Installation
 We recommend installing Anaconda (https://www.anaconda.com/products/distribution#Downloads) to activate the appropriate Python environment with the following commands: 
 
 - Download the repository
@@ -102,12 +67,7 @@ cd MAGIC/src/sample
 We provide a small sample of deidentified NCCT and CTP image data for evaluation and experimentation. You can find two subfolders for training and testing the model within this directory. The training set contains 48 samples from 5 patients, and the testing set contains 10 samples from 1 patient.  
 Each image sample has been preprocessed to a grayscale format and contains both the NCCT and CTP data for a given slice. Each image is presented in a 1280x256 montage. From left to right, the images comprising each sample are non-contrast CT, mean transit time (MTT), time-to-peak (TTP), cerebral blood flow (CBF), and cerebral blood volume (CBV). You can use this sample dataset for the following steps.
 
-To train on the original dataset, set the dataset parameters in the following commands to the following path:
-```
-dataset = '/blue/ruogu.fang/gfullerton/pytorch-pix2pix/new_augmented_data'
-```
-
-### 3. GPU Server Training Instruction
+### GPU Server Training Instruction
 
 Navigate to the directory that contains the Python script [pytorch_pix2pix.py](src/gpu/pytorch_pix2pix.py) for training.
 ```
@@ -150,68 +110,8 @@ When the training process is complete, reattach to the screen session using the 
 screen -dr
 ```
 
-### 4. HiPerGator Training Instruction
-HiPerGator (HPG) offers the benefit of increased processing speeds and access to high-power GPUs, but the interface is not as user-friendly as the lab's GPU server. On HPG, programs must be submitted as a batch SLURM script. These batch jobs can be submitted using the ```sbatch``` command, followed by the name of the corresponding shell (.sh) script.
-
-Navigate to the directory that contains the shell script  [training.sh](src/hpg/training.sh) for training.
-```
-cd MAGIC/src/hpg/
-```
-The program inputs, environment path, and sbatch inputs are specified in this slurm script. The content of this shell script is shown below.
-```bash
-#!/bin/sh
-#SBATCH --job-name=MAGIC_TrainModel
-#SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=USER@ufl.edu        # ADD EMAIL HERE
-#SBATCH --ntasks=8
-#SBATCH --mem=10gb
-#SBATCH --time=20:00:00
-#SBATCH --partition=gpu
-#SBATCH --gpus=1
-#SBATCH --distribution=cyclic:cyclic
-#SBATCH --output=hpg_trainmodel_%j.out
-
-date; hostname; pwd
-
-#  Load environment (Option 1)
-#===============================
-module load conda
-conda activate magic_env
-
-#  Load environment (Option 2)   
-#===============================
-# If you have the location of your environment bin folder
-#export PATH=/home/USER/.conda/envs/magic_env/bin:$PATH
-
-#     Training a Model    
-#===========================
-dataset="../sample"   # Dataset path
-lrG=0.00005           # Generator Learning Rate
-lrD=0.00005           # Discriminator Learning Rate
-train_epoch=50        # Number of epochs
-save_root="results"   # Name for saved root folder
-
-python pytorch_pix2pix.py --dataset $dataset \
-	--lrG $lrG --lrD $lrD --train_epoch $train_epoch \
-  --save_root $save_root\
-
-date
-```
-
-You can specify the memory allocation, memory partitioning, and GPU type and number for the training process by directly modify this shell script. More information about constructing an sbatch shell script can be found on the [HPG wiki](https://help.rc.ufl.edu/doc/Getting_Started).
-
-Running the training shell script by using the following command:
-```
-sbatch training.sh
-```
-This will submit your job in the processing queue, and the training process will begin once the appropriate resources become available. You can check the state of the task by using；
-```
-squeue -A [your_group_name]
-```
-You can now safely disconnect from the HPG server, and you will receive an email once your job is either complete, encounters an error, or runs out of memory.
-
 ## Testing Instruction
-### 1. GPU Server Testing Instruction
+### GPU Server Testing Instruction
 
 Navigate to the directory that contains the Python script [pytorch_pix2pix_test.py](src/gpu/pytorch_pix2pix_test.py) for testing. 
 
@@ -225,52 +125,6 @@ python pytorch_pix2pix_test.py --dataset '../sample' --save_root 'results'
 ```
 After running the test script, you will find: 
 - A subfolder in the in the results folder titled ```test_results```. For the above example, this folder will be located under ```/src/gpu/sample_results/test_results```. 
-### 2. HPG Server Testing Instruction
-Similarly to the training process, the test script also need to be submitted as a batch job to HiPerGator in the form of a SLURM script. Navigate to the directory that contains the shell script [testing.sh](src/hpg/testing.sh) for testing.
-```
-cd MAGIC/src/hpg/
-```
-The content of this shell script is shown below.
-```bash
-#!/bin/sh
-#SBATCH --job-name=MAGIC_TestModel
-#SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=USER@ufl.edu # ADD EMAIL HERE
-#SBATCH --ntasks=1
-#SBATCH --mem=5gb
-#SBATCH --time=00:10:00
-#SBATCH --partition=gpu
-#SBATCH --gpus=1
-#SBATCH --output=hpg_testmodel_%j.out
-
-date; hostname; pwd
-
-#  Load environment (Option 1)
-#===============================
-module load conda
-conda activate magic_env
-
-#  Load environment (Option 2)   
-#===============================
-# If you have the location of your environment bin folder
-#export PATH=/home/USER/.conda/envs/magic_env/bin:$PATH
-
-#      Testing a Model    
-#===========================
-dataset="../sample"                        # Dataset path
-save_root="results"                        # Name for saved root folder
-model_path="../MAGIC_Generator_FINAL.pkl"  # Model path
-
-python pytorch_pix2pix_test.py --dataset $dataset --save_root $save_root --model_path $model_path
-
-date
-```
-You need to specify the dataset and the save_root as same as the specifications used in the [training.sh](src/hpg/training.sh) .
-
-Running the testing shell script by using the following command:
-```
-sbatch testing.sh
-```
 
 ## Postprocessing & Evaluation
 ### Figure Generation
@@ -299,7 +153,6 @@ Before running this script, make sure to change the paths associated with the fo
 This work was financially supported by the National Science Foundation, IIS-1908299 III: Small: Modeling Multi-Level Connectivity of Brain Dynamics + REU Supplement, to the University of Florida and SMILE Laboratory.
 
 ## Contact
-For any questions about this project, please contact [Kyle See](mailto:kylebsee@ufl.edu), or [Ruogu Fang, Ph.D](mailto:ruogu.fang@bme.ufl.edu).
+For any questions about this project, please contact [Garrett Fullerton](mailto:gfullerton@ufl.edu), [Simon Kato](mailto:skato1@ufl.edu), or [Dr. Ruogu Fang](mailto:ruogu.fang@bme.ufl.edu), .
 
-## Last Updated
-August 24, 2023
+

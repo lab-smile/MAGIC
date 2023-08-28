@@ -8,7 +8,7 @@ Any commands you need to enter will be in these code blocks
 ## Login to the UF VPN
 1. Download and login to the [Cisco UF VPN](https://it.ufl.edu/ict/documentation/network-infrastructure/vpn/)
 
-<center> <img src="img/vpn.png"> </center>
+<center> <img src="image/vpn.png"> </center>
 
 ## Access the GPU server
 We can access the lab server using a secure shell (ssh) through a local terminal or [MobaXTerm](https://mobaxterm.mobatek.net/download-home-edition.html). Whenever you see, **USER**, replace with your username for the lab server.
@@ -23,14 +23,14 @@ ssh USER@10.15.224.253
 ### via MobaXTerm
 1. Click the Session button.
 
-<center> <img src="img/session.png"> </center>
+<center> <img src="image/session.png"> </center>
 
 2. Select SSH.
 3. Check the **Specify username** box and enter the following details.
 - Remote host *: 10.15.224.253
 - Specify username: USER
 
-<center> <img src="img/ssh.png"> </center>
+<center> <img src="image/ssh.png"> </center>
 
 4. Click Ok.
 5. Enter your password once prompted. You will not see your password as you type, but it is there.

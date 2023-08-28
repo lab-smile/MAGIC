@@ -9,13 +9,13 @@ function [] = newp2pdataset(input_path,output_path)
 % |-- dataset
 %   |-- NCCT
 %     |-- train
-%       |-- 100001_1.bmp 
-%       |-- 100001_2.bmp
-%       |-- 100001_3.bmp
+%       |-- 100001_1.png 
+%       |-- 100001_2.png
+%       |-- 100001_3.png
 %       |-- ...
 %     |-- val
-%       |-- 100002_1.bmp
-%       |-- 100002_2.bmp
+%       |-- 100002_1.png
+%       |-- 100002_2.png
 %       |-- ...
 %     |-- test
 %       |-- ...
@@ -52,7 +52,7 @@ for i = 1:3
     savepath = fullfile(output_path, split);
     if ~exist(savepath, 'dir'), mkdir(savepath); end
     
-    ncct_files = dir(fullfile(ncct_path, split, '*.bmp'));
+    ncct_files = dir(fullfile(ncct_path, split, '*.png'));
     
     for j = 1:length(ncct_files)
         ncct_file = ncct_files(j);

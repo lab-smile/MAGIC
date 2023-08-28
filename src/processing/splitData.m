@@ -73,7 +73,7 @@ path_rcbv = fullfile(input_path,'rCBV');
 % Check if completed already
 if ~exist(fullfile(path_ncct,'train'),'dir') && ~exist(fullfile(path_ncct,'val'),'dir') && ~exist(fullfile(path_ncct,'test'),'dir')
     % Get directory of all bmp images
-    data_dir = dir(fullfile(path_ncct,'*.bmp'));
+    data_dir = dir(fullfile(path_ncct,'*.png'));
     data_names = {data_dir.name}'; % Convert to string
     
     %% Train/Val/Test Splits

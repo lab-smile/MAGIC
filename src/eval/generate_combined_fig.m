@@ -6,17 +6,18 @@
 %   Biomedical Engineering
 % 
 %----------------------------------------
-% Last Updated: 8/17/2023 by KS
+% Last Updated: 8/28/2023 by KS
 % 
-% 08/17/2023 by KS
+% 08/28/2023 by KS
 % - Added comments and description
+% - Changed input to fake/real folder
 % 
 %% Adjustable Variables
 % #########################################
 close all; clear; clc;
 input_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fakereal';
-fake_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fakereal\fake_images';
-real_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fakereal\real_images';
+fake_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fake\';
+real_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\real\';
 ncct_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\ncct\';
 
 output_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output_2\';
@@ -40,12 +41,12 @@ for i = 1:length(ncct_files)
     if strcmp(ncct_files(i).name(1),'.'),continue;end
     ncct_img = imread(fullfile(ncct_folder,ncct_files(i).name));
     try
-%         fake_name = strrep(ncct_files(i).name,'.bmp','_output.png');
-          fake_name = ncct_files(i).name;
-          real_name = ncct_files(i).name;
+        fake_name = strrep(ncct_files(i).name,'.bmp','_output.png');
+%         fake_name = ncct_files(i).name;
+        real_name = ncct_files(i).name;
 %         fake_name = strrep(ncct_files(i).name,'.png','_Simulated.png');
 %         real_name = strrep(ncct_files(i).name,'.png','_Real.png');
-    
+        
         fake_img = imread(fullfile(fake_folder,fake_name));
         real_img = imread(fullfile(real_folder,real_name));
     catch

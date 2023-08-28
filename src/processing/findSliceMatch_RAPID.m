@@ -25,6 +25,14 @@ function [] = findSliceMatch_RAPID(datasetPath,outputPath)
 % Create v4.
 % add gui and update selection methods
 %
+% 8/22/2023 by KS
+% 
+% - Resolved an issue where the index for NCCT slice is exceeded.
+% - Resolved an issue where the index for NCCT slice is undercut.
+% - Resolved an issue with selecting from multiple NCCT modalities. The
+%   NCCT keyword is prioritized first, then other filenames, and lastly
+%   summary files.
+% 
 % 8/21/2023 by KS
 % - Changed script into a function.
 % - Adjusted printing text.
@@ -57,11 +65,11 @@ function [] = findSliceMatch_RAPID(datasetPath,outputPath)
 %% Adjustable Variables
 %#########################################
 % clc; clear; close all; warning off;
-% Input folder - folders must follow the order
-% > Subject -> Study -> Session -> Image
-% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\input_small';
-% Output folder - will be created
-% outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output_small';
+% % Input folder - folders must follow the order
+% % > Subject -> Study -> Session -> Image
+% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test';
+% % Output folder - will be created
+% outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_output';
 %#########################################
 
 fprintf("Starting...findSliceMatch_RAPID.m\n")
@@ -120,16 +128,27 @@ if ~exist(NCCTsavePath,'dir'), mkdir(NCCTsavePath); end
 %skipped_subjects = struct;
 skip_idx = 1;
 
-subjects = dir(datasetPath); % Directory list of input folders
+% Checkpoint files to skip subjects.
+flagPath = fullfile(datasetPath,'completed');
+if ~exist(flagPath,'dir'), mkdir(flagPath); end
 
+subjects = dir(datasetPath); % Directory list of input folders
+subjects(end) = [];
 
 %% Get all file paths in one place
 % Loop through all subjects in input folder (skips hidden)
-for j = startNum+2:length(subjects)
+parfor j = startNum+2:length(subjects)
     
     % Grab subject name
     subject = subjects(j);
     subject_name = subject.name;
+    
+    % Skip file if already complete
+    flagFile = fullfile(flagPath,[subject_name,'.txt']);
+    if exist(flagFile,'file')
+        fprintf("> Subject %s already processed\n",subject_name)
+        continue;
+    end
        
     [~,~,ext] = fileparts(fullfile(subject.folder,subject_name));  % Get extension
     if strcmp(ext,'.csv') || strcmp(ext,'.xlsx'), continue; end    % Skip if it isn't a study folder
@@ -168,7 +187,19 @@ for j = startNum+2:length(subjects)
         NCCT_files = dir(NCCT_selpath);
     else
         NCCT_series = series_names(NCCT_idx);
-        NCCT_series_name = string(NCCT_series(1));
+        contains_NCCT = contains(NCCT_series, "NCCT");
+        index_NCCT = find(contains_NCCT,1);
+        if ~isempty(index_NCCT)
+            NCCT_series_name = string(NCCT_series(index_NCCT));
+        else
+            contains_summary = ~contains(NCCT_series, "SUMMARY");
+            index_summary = find(contains_summary,1);
+            if ~isempty(index_summary)
+                NCCT_series_name = string(NCCT_series(index_summary));
+            else
+                NCCT_series_name = string(NCCT_series(1));
+            end
+        end
         NCCT_files = dir(fullfile(study_name.folder,study_name.name,NCCT_series_name,'*.dcm'));
     end
     
@@ -242,33 +273,34 @@ for j = startNum+2:length(subjects)
     % go through each map (one modality only in loop)
     %for i = 1:length(rCBV_zcoords)
     % Truncate first and last 3 coords
-    
-    total_slices = (length(rCBV_zcoords)-3)-4+1;
 
-    checkOutput = 0;
-    for ii = 1:total_slices
-        img_name = strcat(extractBefore(subject_name,'_'),'_',num2str(ii),'.bmp');
-        if exist(fullfile(rCBVPath,img_name),'file')
-            checkOutput = checkOutput+1;
-        end
-        if exist(fullfile(TTPPath,img_name),'file')
-            checkOutput = checkOutput+1;
-        end
-        if exist(fullfile(rCBFPath,img_name),'file')
-            checkOutput = checkOutput+1;
-        end
-        if exist(fullfile(MTTPath,img_name),'file')
-            checkOutput = checkOutput+1;
-        end
-        if exist(fullfile(NCCTsavePath,img_name),'file')
-            checkOutput = checkOutput+1;
-        end
-
-    end
-    if checkOutput == total_slices*5
-        fprintf("> Subject %s already processed\n",subject_name)
-        continue;
-    end
+%     % Used to check for progress. Replaced by flag system.
+%     total_slices = (length(rCBV_zcoords)-3)-4+1;
+% 
+%     checkOutput = 0;
+%     for ii = 1:total_slices
+%         img_name = strcat(extractBefore(subject_name,'_'),'_',num2str(ii),'.bmp');
+%         if exist(fullfile(rCBVPath,img_name),'file')
+%             checkOutput = checkOutput+1;
+%         end
+%         if exist(fullfile(TTPPath,img_name),'file')
+%             checkOutput = checkOutput+1;
+%         end
+%         if exist(fullfile(rCBFPath,img_name),'file')
+%             checkOutput = checkOutput+1;
+%         end
+%         if exist(fullfile(MTTPath,img_name),'file')
+%             checkOutput = checkOutput+1;
+%         end
+%         if exist(fullfile(NCCTsavePath,img_name),'file')
+%             checkOutput = checkOutput+1;
+%         end
+% 
+%     end
+%     if checkOutput == total_slices*5
+%         fprintf("> Subject %s already processed\n",subject_name)
+%         continue;
+%     end
         
     % Go through each map (one modality only in loop)
     for i = 4:length(rCBV_zcoords)-3
@@ -305,6 +337,7 @@ for j = startNum+2:length(subjects)
         [closest_val,idx] = min(abs(NCCT_zs-rCBV_z));
         
         % Find 2 offset slices from main slice match
+        if idx+NCCT_slice_offset > length(NCCT_zs) || idx-NCCT_slice_offset < 1, continue; end
         NCCT_z_1 = NCCT_zs(idx-NCCT_slice_offset);
         NCCT_z_2 = NCCT_zs(idx);
         NCCT_z_3 = NCCT_zs(idx+NCCT_slice_offset);
@@ -392,6 +425,8 @@ for j = startNum+2:length(subjects)
             slice_num=slice_num+1;
         end
     end
+    fileID = fopen(flagFile,'w');
+    fclose(fileID);
     fprintf('> Finished with subject %s\n',subject_name);
 end
 fprintf("------------------------------------------------------------------\n")
