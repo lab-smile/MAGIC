@@ -9,16 +9,21 @@
 % Last Updated: 8/28/2023 by KS
 % 
 % 08/28/2023 by KS
-% - Added comments and description
+% - Changed script name from `generate_combined_fig.m` to
+% `generateSliceComparison.m`.
+% - Added comments and description.
 % - Changed input to fake/real folder
+% - Changed output to consist of 
 % 
 %% Adjustable Variables
 % #########################################
 close all; clear; clc;
-input_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fakereal';
-fake_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fake\';
-real_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\real\';
-ncct_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\ncct\';
+pairedPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_paired';
+evalPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_eval';
+
+% fake_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\fake\';
+% real_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\real\';
+% ncct_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\ncct\';
 
 output_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\output_2\';
 % #########################################
@@ -28,8 +33,10 @@ output_folder = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAG
 
 % for k = 1:length(folders)
 %     folder_name = cell2mat(folders(k));
-    
-    
+
+fake_folder = fullfile(pairedPath,'fake_images');
+real_folder = fullfile(pairedPath,'real_images');
+
 % input_folder = fullfile(strcat('C:/Users/Garrett/Desktop/new_augmented_data/', folder_name, '_fakereal_combined_v2/'));
 % fake_folder = fullfile(input_folder,'fake');
 % ncct_folder = fullfile(input_folder,'ncct');

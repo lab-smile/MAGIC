@@ -1,4 +1,4 @@
-function correctDir = fixDir(tempDir)
+function correctDir = fix_dir(tempDir)
 %----------------------------------------
 % Created by Garrett Fullerton and Simon Kato
 % University of Florida, Dept. of Biomedical Engineering

@@ -1,4 +1,4 @@
-function [] = fixStudy(datasetPath)
+function [] = fix_study(datasetPath)
 %% Fix Study Folder
 % This function fixes the issue of multiple study folders. The
 % DICOM-deidentification code may create an extra folder with an untitled

@@ -1,5 +1,5 @@
-function [] = splitData(input_path,test_size)
-%% Description
+function [] = partitionData(partitionPath,testSize)
+%% Partition Data
 % The current use of the code is to take the results from
 % findSliceMatch_RAPID.m and split the subjects into hold out splits.
 % Expects input to have NCCT, rCBF, rCBV, MTT, and TTP folders. Each folder
@@ -12,28 +12,28 @@ function [] = splitData(input_path,test_size)
 % Input
 % |-- dataset
 %   |-- NCCT
-%     |-- 100000_1.bmp
-%     |-- 100000_2.bmp
-%     |-- 209271_1.bmp
-%     |-- 451281_1.bmp    
+%     |-- 100000_1.png
+%     |-- 100000_2.png
+%     |-- 209271_1.png
+%     |-- 451281_1.png    
 %   |-- rCBF
-%     |-- 100000_1.bmp
-%     |-- 100000_2.bmp
-%     |-- 209271_1.bmp
-%     |-- 451281_1.bmp
+%     |-- 100000_1.png
+%     |-- 100000_2.png
+%     |-- 209271_1.png
+%     |-- 451281_1.png
 %   |-- ...
 % 
 % Output
 % |-- dataset
 %   |-- NCCT
 %     |-- train
-%       |-- 100001_1.bmp 
-%       |-- 100001_2.bmp
-%       |-- 100001_3.bmp
+%       |-- 100001_1.png 
+%       |-- 100001_2.png
+%       |-- 100001_3.png
 %       |-- ...
 %     |-- val
-%       |-- 100002_1.bmp
-%       |-- 100002_2.bmp
+%       |-- 100002_1.png
+%       |-- 100002_2.png
 %       |-- ...
 %     |-- test
 %       |-- ...
@@ -45,9 +45,12 @@ function [] = splitData(input_path,test_size)
 %   Biomedical Engineering
 % 
 %   Input:
-%       input_path - Path to data.
-%       test_size  - Size of hold out and validation set [0,1].
-
+%       partitionPath - Path to source folder containing partitioned data.
+%       testSize      - Size of hold out and validation set [0,1].
+% 
+%----------------------------------------
+% Last Updated: 8/22/2023 by KS
+% 
 %% Adjustable Variables
 % #########################################
 % close all; clear; clc;
@@ -63,11 +66,11 @@ rng('default')
 
 %% Setup
 % Setup expected subfolders for NCCT and perfusion modalities
-path_ncct = fullfile(input_path,'NCCT');
-path_mtt = fullfile(input_path,'MTT');
-path_ttp = fullfile(input_path,'TTP');
-path_rcbf = fullfile(input_path,'rCBF');
-path_rcbv = fullfile(input_path,'rCBV');
+path_ncct = fullfile(partitionPath,'NCCT');
+path_mtt = fullfile(partitionPath,'MTT');
+path_ttp = fullfile(partitionPath,'TTP');
+path_rcbf = fullfile(partitionPath,'rCBF');
+path_rcbv = fullfile(partitionPath,'rCBV');
 
 
 % Check if completed already
@@ -91,7 +94,7 @@ if ~exist(fullfile(path_ncct,'train'),'dir') && ~exist(fullfile(path_ncct,'val')
     
     % Use cvpartition to create a train and test set. We will use the train set
     % to create a validation set that is the same size as the test set.
-    cv = cvpartition(subj_amt,'HoldOut',test_size);
+    cv = cvpartition(subj_amt,'HoldOut',testSize);
     
     % Use cvpartition again to create a train and validation set.
     val_size = sum(cv.test)/sum(cv.training);          % Calc size of val size based on resulting test size
@@ -110,15 +113,15 @@ if ~exist(fullfile(path_ncct,'train'),'dir') && ~exist(fullfile(path_ncct,'val')
     unique_names_val = string(unique_train(cv_val.test));
     unique_names_test = string(unique_names(cv.test));
     
-    fprintf("Intended split: Train-%.2f Val-%.2f Test-%.2f\n",1-test_size-val_size,val_size,test_size)
+    fprintf("Intended split: Train-%.2f Val-%.2f Test-%.2f\n",1-testSize-val_size,val_size,testSize)
     fprintf("Initial split:  Train-%.2f Val-%.2f Test-%.2f\n",ratio_train,ratio_val,ratio_test)
     fprintf("------------------------------------------------------------------\n")
     
-    path_ncct = fullfile(input_path,'NCCT');
-    path_mtt = fullfile(input_path,'MTT');
-    path_ttp = fullfile(input_path,'TTP');
-    path_rcbf = fullfile(input_path,'rCBF');
-    path_rcbv = fullfile(input_path,'rCBV');
+    path_ncct = fullfile(partitionPath,'NCCT');
+    path_mtt = fullfile(partitionPath,'MTT');
+    path_ttp = fullfile(partitionPath,'TTP');
+    path_rcbf = fullfile(partitionPath,'rCBF');
+    path_rcbv = fullfile(partitionPath,'rCBV');
     
     %% Moving the data
     % Create train/val/test paths

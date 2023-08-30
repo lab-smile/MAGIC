@@ -1,4 +1,4 @@
-function [] = run_processing(deid_path,partition_path,dataset_path,test_ratio)
+function [] = runProcessing(deid_path,partition_path,dataset_path,test_ratio)
 %% Run Processing
 % This code handles all processing steps. Calls different functions to
 % process specifically UF Health deidentified CT data. Deidentification
@@ -36,7 +36,7 @@ function [] = run_processing(deid_path,partition_path,dataset_path,test_ratio)
 % dataset_path = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_real';
 % test_ratio = 0.2;
 %#########################################
-findSliceMatch_RAPID(deid_path,partition_path)
-splitData(partition_path,test_ratio)
-newp2pdataset(partition_path,dataset_path)
+matchNcctAndRapid(deid_path,partition_path)
+partitionData(partition_path,test_ratio)
+concatenateMaps(partition_path,dataset_path)
 end

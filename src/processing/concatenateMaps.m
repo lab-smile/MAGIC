@@ -1,4 +1,4 @@
-function [] = newp2pdataset(input_path,output_path)
+function [] = newp2pdataset(partitionPath,datasetPath)
 %% Description
 % The current use of the code is to concatenate the NCCT and CTP maps into
 % a single 1x5 image. This image will be used for training and testing in
@@ -21,7 +21,18 @@ function [] = newp2pdataset(input_path,output_path)
 %       |-- ...
 %   |-- rCBV
 %   |-- ...
-
+% 
+%   Garrett Fullerton 10/18/2020
+%   Smart Medical Informatics Learning and Evaluation (SMILE) Laboratory
+%   Biomedical Engineering
+% 
+%   Input:
+%       partitionPath   - Path to source folder containing partitioned data.
+%       datasetPath     - Path to output folder to store processed dataset.
+% 
+%----------------------------------------
+% Last Updated: 8/28/2023 by KS
+% 
 %% Adjustable Variables
 % #########################################
 % close all; clear; clc;
@@ -32,13 +43,13 @@ function [] = newp2pdataset(input_path,output_path)
 fprintf("Starting...newp2pdataset.m\n")
 fprintf("------------------------------------------------------------------\n")
 
-ncct_path = fullfile(input_path,'NCCT');
-mtt_path = fullfile(input_path,'MTT');
-ttp_path = fullfile(input_path,'TTP');
-rcbf_path = fullfile(input_path,'rCBF');
-rcbv_path = fullfile(input_path,'rCBV');
+ncct_path = fullfile(partitionPath,'NCCT');
+mtt_path = fullfile(partitionPath,'MTT');
+ttp_path = fullfile(partitionPath,'TTP');
+rcbf_path = fullfile(partitionPath,'rCBF');
+rcbv_path = fullfile(partitionPath,'rCBV');
 
-if ~exist(output_path, 'dir'), mkdir(output_path); end
+if ~exist(datasetPath, 'dir'), mkdir(datasetPath); end
 
 for i = 1:3
     switch i
@@ -49,7 +60,7 @@ for i = 1:3
         case 3
             split = 'val';
     end
-    savepath = fullfile(output_path, split);
+    savepath = fullfile(datasetPath, split);
     if ~exist(savepath, 'dir'), mkdir(savepath); end
     
     ncct_files = dir(fullfile(ncct_path, split, '*.png'));

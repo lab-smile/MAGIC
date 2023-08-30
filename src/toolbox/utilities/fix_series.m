@@ -1,4 +1,4 @@
-function [] = fixSeries(datasetPath)
+function [] = fix_series(datasetPath)
 %% Fix Series Folders
 % This function fixes the issue of multiple series folders. The
 % DICOM-deidentification code may have given each .dcm file its own folder.

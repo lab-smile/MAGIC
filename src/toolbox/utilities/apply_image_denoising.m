@@ -1,4 +1,4 @@
-function outImage = applyImageDenoising(inImage, method)
+function outImage = apply_image_denoising(inImage, method)
 % intended to work on grayscale
 inImage(inImage == 0) = nan;
 switch method

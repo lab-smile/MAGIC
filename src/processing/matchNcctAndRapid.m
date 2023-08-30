@@ -1,4 +1,4 @@
-function [] = findSliceMatch_RAPID(datasetPath,outputPath)
+function [] = matchNcctAndRapid(deidPath,partitionPath)
 %% Match NCCT and CTP Perfusion Map Slices
 % This is the main function for matching NCCT and CTP perfusion map slices.
 % This function requires that the dataset contain NCCT and Perfusion Map
@@ -17,16 +17,15 @@ function [] = findSliceMatch_RAPID(datasetPath,outputPath)
 %   Biomedical Engineering
 % 
 %   Input:
-%       datasetPath   - Path to input folder containing deid subjects
-%       outputPath    - Path to output folder
+%       deidPath     - Path to source folder containing deid subjects.
+%       outputPath   - Path to output folder to store partitioned data.
 % 
 %----------------------------------------
-% Last Updated: 5/26/2023 by KS
+% Last Updated: 8/22/2023 by KS
 % Create v4.
 % add gui and update selection methods
 %
 % 8/22/2023 by KS
-% 
 % - Resolved an issue where the index for NCCT slice is exceeded.
 % - Resolved an issue where the index for NCCT slice is undercut.
 % - Resolved an issue with selecting from multiple NCCT modalities. The
@@ -72,14 +71,21 @@ function [] = findSliceMatch_RAPID(datasetPath,outputPath)
 % outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_output';
 %#########################################
 
-fprintf("Starting...findSliceMatch_RAPID.m\n")
+fprintf("Starting...matchNcctAndRapid.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 % Fix any issues with study or series folders
-fixStudy(datasetPath)
-fixSeries(datasetPath)
+fixStudy(deidPath)
+fixSeries(deidPath)
 
 % Add utilities
+% - rgb2values.m
+% - convert_dicom_to_uint8.m
+% - apply_ncct_mask.m
+% - fix_series.m
+% - fix_study.m
+% - parsave.m
+% - pct_brainMask_noEyes.m
 addpath('../toolbox/utilities')
 
 % What is this? It is 3-columns with values in them.
@@ -99,7 +105,7 @@ save_check = 'y'; % Save or not
 % to determine which image belongs to which perfusion map.
 load('RAPIDModalities.mat','MTT_test','TTP_test','rCBF_test','rCBV_test');
 
-if ~exist(fullfile(outputPath),'dir'), mkdir(fullfile(outputPath)); end
+if ~exist(fullfile(partitionPath),'dir'), mkdir(fullfile(partitionPath)); end
 
 %NCCTPath = fullfile(outputPath,'NCCT');
 %mapsPath = fullfile(outputPath,'maps');
@@ -110,12 +116,12 @@ if ~exist(fullfile(outputPath),'dir'), mkdir(fullfile(outputPath)); end
 %if ~exist(mapsPath,'dir'), mkdir(mapsPath); end
 
 %MIPPath = fullfile(outputPath, 'MIP');
-rCBVPath = fullfile(outputPath, 'rCBV');
-TTPPath = fullfile(outputPath, 'TTP');
-rCBFPath = fullfile(outputPath,'rCBF');
-MTTPath = fullfile(outputPath, 'MTT');
+rCBVPath = fullfile(partitionPath, 'rCBV');
+TTPPath = fullfile(partitionPath, 'TTP');
+rCBFPath = fullfile(partitionPath,'rCBF');
+MTTPath = fullfile(partitionPath, 'MTT');
 %DelayPath = fullfile(outputPath, 'Delay');
-NCCTsavePath = fullfile(outputPath, 'NCCT');
+NCCTsavePath = fullfile(partitionPath, 'NCCT');
 
 %if ~exist(MIPPath,'dir'), mkdir(MIPPath); end
 if ~exist(rCBVPath,'dir'), mkdir(rCBVPath); end
@@ -129,10 +135,10 @@ if ~exist(NCCTsavePath,'dir'), mkdir(NCCTsavePath); end
 skip_idx = 1;
 
 % Checkpoint files to skip subjects.
-flagPath = fullfile(datasetPath,'completed');
+flagPath = fullfile(deidPath,'completed');
 if ~exist(flagPath,'dir'), mkdir(flagPath); end
 
-subjects = dir(datasetPath); % Directory list of input folders
+subjects = dir(deidPath); % Directory list of input folders
 subjects(end) = [];
 
 %% Get all file paths in one place
@@ -394,13 +400,13 @@ parfor j = startNum+2:length(subjects)
         NCCT_img = cat(3, NCCT_img_1, NCCT_img_2, NCCT_img_3);
         
         % Create save name using subject ID + slice number
-        saveName = strcat( extractBefore(subject_name,'_'),'_',num2str(slice_num),'.bmp');
+        saveName = strcat( extractBefore(subject_name,'_'),'_',num2str(slice_num),'.png');
         
         % Apply NCCT mask
-        MTT_img_fin = applyNCCTMask(MTT_img,mask_fin);
-        rCBF_img_fin = applyNCCTMask(rCBF_img,mask_fin);
-        rCBV_img_fin = applyNCCTMask(rCBV_img,mask_fin);
-        TTP_img_fin = applyNCCTMask(TTP_img,mask_fin);
+        MTT_img_fin = apply_ncct_mask(MTT_img,mask_fin);
+        rCBF_img_fin = apply_ncct_mask(rCBF_img,mask_fin);
+        rCBV_img_fin = apply_ncct_mask(rCBV_img,mask_fin);
+        TTP_img_fin = apply_ncct_mask(TTP_img,mask_fin);
         
         % If blank image, skip
         if all(NCCT_img_1(:)==0) || all(NCCT_img_2(:)==0) || all(NCCT_img_3(:)==0)
@@ -430,7 +436,7 @@ parfor j = startNum+2:length(subjects)
     fprintf('> Finished with subject %s\n',subject_name);
 end
 fprintf("------------------------------------------------------------------\n")
-fprintf("Finished...findSliceMatch_RAPID.m\n")
+fprintf("Finished...matchNcctAndRapid.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 end
