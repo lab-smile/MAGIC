@@ -17,7 +17,7 @@ addpath(p_deident);
 
 input = 'C:\Users\skato1\Desktop\REU\data\evaluation_3';
 output = 'C:\Users\skato1\Desktop\REU\data\evaluation_3_final';
-patients = fixDir(input);
+patients = fix_dir(input);
 
 %% Check if output is a folder, if not create it 
 
@@ -37,7 +37,7 @@ predicted_assignments = abs(real_assignments - ones(length(patients),1));
 patientIDs = [];
 
 for i = 1 : length(patients)
-   curPatient = fixDir(fullfile(patients(i).folder, patients(i).name));
+   curPatient = fix_dir(fullfile(patients(i).folder, patients(i).name));
    patientIDs = [patientIDs; patients(i).name];
    movefile(fullfile(patients(i).folder, patients(i).name,'fake_images.bmp'), fullfile(patients(i).folder, patients(i).name, strcat('CTP_',int2str(predicted_assignments(i)),'.bmp')));
    movefile(fullfile(patients(i).folder, patients(i).name,'real_images.bmp'), fullfile(patients(i).folder, patients(i).name, strcat('CTP_',int2str(real_assignments(i)),'.bmp')));

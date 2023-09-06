@@ -1,3 +1,46 @@
+## [0.0.3] - 2023-08-30
+### Added
+- `generateSliceReport.m` Vertically concatenates slices from a single subject generated from `generateSliceComparison.m`.
+
+### Changed
+- `pytorch_pix2pix.py` Moved all model related files into `models` folder for output.
+- `pytorch_pix2pix.py` Renamed `Fixed_results` output to `epoch_validation` to better reflect usage.
+- Renamed files. Main executable scripts follow CamelCase while supporting functions follow snake_case. All functions are updated to new names in any script that it is used in.
+    - `findSliceMatch_RAPID.m` --> `matchNcctAndRapid.m`
+    - `splitData.m` --> `partitionData.m`
+    - `newp2pdataset.m` --> `concatenateMaps.m`
+    - `applyNCCTMask.m` --> `apply_ncct_mask.m`
+    - `fixSeries.m` --> `fix_series.m`
+    - `fixStudy.m` --> `fix_study.m`
+    - `identifyRAPIDModality.m` --> identify_rapid_modality.m`
+    - `RAPIDModalities.mat` --> `rapid_modalities.mat`
+    - `run_processing.m` --> `runProcessing.m`
+    - `convert_DICOM_to_uint8.m` --> `convert_dicom_to_uint8.m`
+    - `createPath.m` --> `create_path.m`
+    - `fixDir.m` --> `fix_dir.m`
+    - `generate_fake_real_folder.m` --> `createPairedDataset.m`
+    - `generate_combined_fig.m` --> `generateSliceComparison.m`
+    - `getmetrics.ipynb` --> `getMetrics.ipynb`
+    - `generate_series.m` --> `generateMapComparison.m`
+    - `applyImageDenoising.m` --> `apply_image_denoising.m`
+    - `Rapid_Colormap.mat` --> `rapid_colormap.mat`
+- Moved functions to /toolbox/utilities
+    - `apply_ncct_mask.m`
+    - `fix_series.m`
+    - `fix_study.m`
+    - `identify_rapid_modality.m`
+    - `parsave.m`
+    - `pct_brainMask_noEyes.m`
+    - `rapid_modalities.mat`
+    - `apply_image_denoising.m`
+    - `rapid_colormap.mat`
+- `generateSliceComparison.m` Now outputs NCCT, real perfusion maps, then fake perfusion maps from left-to-right with small white space borders. This replaces the concatenation order of NCCT, white space, fake perfusion maps, NCCT, then real perfusion maps from left-to-right.
+- `generateSliceComparison.m` Reads .png instead of .bmp
+
+### Fixed
+- Resolved an issue where a batch size > 1 in training and a batch size = 1 in testing loaded different layers. Fixed only in the generator by adding a batch norm argument which controls the use of batch norm vs. instance norm instead of batch size.
+- `fix_study.m` Resolved an issue where cta filter failed for an unknown filename.
+
 ## [0.0.2] - 2023-08-22
 ### Added
 - New `legacy` folder will now contain scripts and files that are no longer used.
@@ -7,6 +50,7 @@
 - `pytorch_pix2pix_test.py` Now checks to make sure batch size is less than the test loader size.
 
 ### Changed
+- Update input variable names for the processing main functions to clarify path purpose.
 - `generate_fake_real_folder.m` Reads .png instead of .bmp
 - `findSliceMatch_RAPID.m` Saves .png instead of .bmp
 - `findSliceMatch_RAPID.m` A flag system using empty .txt files is now used to track progress, instead of checking for multiple instances of partitioned data within each modality.

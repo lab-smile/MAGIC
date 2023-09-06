@@ -57,7 +57,7 @@ opts = setvaropts(opts, "patientIDs", "WhitespaceRule", "preserve");
 opts = setvaropts(opts, "patientIDs", "EmptyFieldRule", "auto");
 
 % Import the data
-data_path = createPath("../utilities");
+data_path = create_path("../utilities");
 patients = readtable(strcat(data_path, 'ids.xlsx'), opts, "UseExcel", false);
 
 
@@ -74,14 +74,14 @@ if not(isfolder(output_path))
 end
 
 
-all_images = fixDir(all_image_path);
+all_images = fix_dir(all_image_path);
 
 for j = 1: size(patients,1)
     cur_patient = num2str(patients{j,1});
     
     for i = 1 : length(all_images)
        image_type_path = strcat(all_images(i).folder, '\', all_images(i).name);
-       image_type_folder = fixDir(image_type_path);
+       image_type_folder = fix_dir(image_type_path);
        image_type = all_images(i).name;
        
        blank = zeros(256,256,3);

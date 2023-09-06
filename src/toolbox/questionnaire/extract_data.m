@@ -112,8 +112,8 @@ opts = setvaropts(opts, ["Question1", "Question2A", "Question2B", "Question2C", 
 % Load in the data for the two trials, the first is in Data0 and the second
 % in Data1 
 
-results1 = fixDir(dir(results1));
-results2 = fixDir(dir(results2));
+results1 = fix_dir(dir(results1));
+results2 = fix_dir(dir(results2));
 
 Data1 = []; % Results from the first trial
 Data2 = []; % Results from the second trial

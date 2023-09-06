@@ -1,10 +1,10 @@
 #!/bin/sh
 #SBATCH --job-name=MAGIC_TestModel
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=USER@ufl.edu # ADD EMAIL HERE
+#SBATCH --mail-user=kylebsee@ufl.edu # ADD EMAIL HERE
 #SBATCH --ntasks=1
-#SBATCH --mem=5gb
-#SBATCH --time=00:10:00
+#SBATCH --mem=10gb
+#SBATCH --time=1:00:00
 #SBATCH --partition=hpg-ai
 #SBATCH --gpus=a100:1
 #SBATCH --output=hpg_testmodel_%j.out
@@ -23,10 +23,18 @@ conda activate magic_env
 
 #      Testing a Model    
 #===========================
-dataset="../sample"                        # Dataset path
+dataset="/blue/ruogu.fang/kylebsee/MAGIC/newput"                        # Dataset path
 save_root="results"                        # Name for saved root folder
-model_path="../MAGIC_Generator_FINAL.pkl"  # Model path
+model_path="./MAGIC_Generator_FINAL-v2.pkl"  # Model path
 
 python pytorch_pix2pix_test.py --dataset $dataset --save_root $save_root --model_path $model_path
 
 date
+
+python pytorch_pix2pix_test.py --dataset ../data/dataset --save_root results --model_path ../data/dataset_results/models/dataset_generator_param_final.pkl --batch_norm True
+
+python pytorch_pix2pix_test.py --dataset ../data/dataset --save_root results --model_path ./MAGIC_Generator_FINAL-v2.pkl --batch_norm True
+
+
+
+python pytorch_pix2pix_test.py --dataset ../data/dataset_sample --save_root results --model_path ../data/dataset_sample_results/models/dataset_sample_generator_param_final.pkl

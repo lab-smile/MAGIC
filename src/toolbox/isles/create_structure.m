@@ -18,12 +18,12 @@ caseNum = 1;
 
 fileID = fopen(strcat(outputPath, 'inference.txt'), 'w');
 
-synPath = createPath(synPath);
-testPath = createPath(testPath);
-outputPath = createPath(outputPath);
+synPath = create_path(synPath);
+testPath = create_path(testPath);
+outputPath = create_path(outputPath);
 
 dataset = dir(synPath);
-dataset = fixDir(dataset);
+dataset = fix_dir(dataset);
 
 for i = 1:length(dataset)
     curPatient = dataset(i).name(1:8);

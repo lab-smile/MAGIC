@@ -43,7 +43,7 @@ addpath(p_deident);
 
 
 %% Find all ratios
-datasetPath = createPath(datasetPath);
+datasetPath = create_path(datasetPath);
 
 if ~strcmp(datasetPath(end),'/')
     datasetPath = [datasetPath '/'];
@@ -58,7 +58,7 @@ if strcmp(outputFile(end),'/')
 end
 
 patients = dir(datasetPath);
-patients = fixDir(patients);
+patients = fix_dir(patients);
 
 patientIDs = strings(length(patients), 1);
 list = zeros(length(patients), 2);
@@ -70,18 +70,18 @@ for i = 1: length(patients)
     
     patientIDs(i) = patient.name;
 
-    tempDirs = fixDir(tempDirs);
+    tempDirs = fix_dir(tempDirs);
     tempDir = tempDirs(1);
     
     subDirs = dir(fullfile(datasetPath, '/', patient.name, '/', tempDir.name));
-    subDirs = fixDir(subDirs);
+    subDirs = fix_dir(subDirs);
     
     for j = 1 : length(subDirs)
         tempName = subDirs(j).name;
         tempName = replace(tempName,' ','_');
          if strcmp(tempName, 'RAPID_CT-P_Summary')
             files = dir(fullfile(datasetPath, patient.name, '/', tempDir.name, '/', subDirs(j).name));
-            files = fixDir(files);
+            files = fix_dir(files);
 
             for fileNum = 1 : length(files)
                 curFile = strcat(datasetPath, patient.name, '/', tempDir.name, '/', subDirs(j).name, '/', files(fileNum).name);

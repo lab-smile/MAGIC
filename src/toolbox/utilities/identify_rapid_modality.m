@@ -1,4 +1,4 @@
-function modality_name = identifyRAPIDModality(map_img, TTP_test, rCBV_test, rCBF_test, MTT_test)
+function modality_name = identify_rapid_modality(map_img, TTP_test, rCBV_test, rCBF_test, MTT_test)
 %% Description
 % This function identifies the type of perfusion map given a snippet of the
 % perfusion map title. The title of the map is not accessible through text

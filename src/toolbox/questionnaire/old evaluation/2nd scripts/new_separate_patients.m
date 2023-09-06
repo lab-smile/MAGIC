@@ -47,7 +47,7 @@ if not(isfolder(output))
 end
 
 
-all_images = fixDir(all_image_path);
+all_images = fix_dir(all_image_path);
 patients = importdata('patient_test.xlsx');
 
 for j = 1: length(patients)
@@ -55,7 +55,7 @@ for j = 1: length(patients)
     
     for i = 1 : length(all_images)
        image_type_path = strcat(all_images(i).folder, '\', all_images(i).name);
-       image_type_folder = fixDir(image_type_path);
+       image_type_folder = fix_dir(image_type_path);
        image_type = all_images(i).name;
        
        blank = zeros(256,256,3);

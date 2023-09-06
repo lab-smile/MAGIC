@@ -1,4 +1,4 @@
-function absolutePath = createPath(relativePath)
+function absolutePath = create_path(relativePath)
 %----------------------------------------
 % Created by Garrett Fullerton and Simon Kato
 % University of Florida, Dept. of Biomedical Engineering

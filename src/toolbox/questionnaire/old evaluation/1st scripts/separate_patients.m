@@ -46,19 +46,19 @@ all_image_path = 'C:\Users\skato1\Desktop\REU\data\patients_filter_collage';
 output_path = 'C:\Users\skato1\Desktop\REU\data\patients_filter';
 
 %% Do not edit below this point
-all_images = fixDir(all_image_path);
+all_images = fix_dir(all_image_path);
 patients = importdata('patient_test.xlsx');
 
 for i = 1 : length(all_images)
    image_type_path = strcat(all_images(i).folder, '\', all_images(i).name);
-   image_type_folder = fixDir(image_type_path);
+   image_type_folder = fix_dir(image_type_path);
    image_type = all_images(i).name;
    
    for j = 1 : length(image_type_folder)
       modality = image_type_folder(j);
       modality_name = modality.name;
       
-      modality_images = fixDir(strcat(modality.folder,'\',modality.name));
+      modality_images = fix_dir(strcat(modality.folder,'\',modality.name));
       numPatients = 62;
       
       for k = 1 : numPatients

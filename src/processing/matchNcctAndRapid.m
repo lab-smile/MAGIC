@@ -47,19 +47,16 @@ function [] = matchNcctAndRapid(deidPath,partitionPath)
 % 11/1/2020 by GF
 % - Create v4
 % - Added gui and update selection methods
-
-
-%outline
-%index all the NCCT slices and get a list of the z-locations
-%get a list of all the maps files
-%for ONE modality of the maps files (length/4)
-    %find the closest NCCT
-    %find the matching slices from the other modalities
-    %^^slice_num=length/4 * i + idx (for i=1:3, idx = idx between
-    %1,length/4)
-    %name everything the same and save everything
-    %increment slice idx
-%done!
+% 
+% 
+% ## Outline ##
+% Index all of the NCCT slices
+% Prepare a list of all z-locations of slices
+% Get list of all perfusion map files
+% Iterate across each slice
+%   - Find the closest NCCT slice based on z-locations
+%   - Find matching slices from perfusion maps
+%   - Name everything and save all
 
 %% Adjustable Variables
 %#########################################
@@ -75,8 +72,8 @@ fprintf("Starting...matchNcctAndRapid.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 % Fix any issues with study or series folders
-fixStudy(deidPath)
-fixSeries(deidPath)
+fix_study(deidPath)
+fix_series(deidPath)
 
 % Add utilities
 % - rgb2values.m
@@ -86,6 +83,7 @@ fixSeries(deidPath)
 % - fix_study.m
 % - parsave.m
 % - pct_brainMask_noEyes.m
+% - rapid_modalities.mat
 addpath('../toolbox/utilities')
 
 % What is this? It is 3-columns with values in them.
@@ -103,7 +101,7 @@ save_check = 'y'; % Save or not
 % This file contains text MTT_test, TTP_test, rCBF_test, and rCBV_test.
 % These files are pictures of the the corresponding words. These are used
 % to determine which image belongs to which perfusion map.
-load('RAPIDModalities.mat','MTT_test','TTP_test','rCBF_test','rCBV_test');
+load('../toolbox/utilities/rapid_modalities.mat','MTT_test','TTP_test','rCBF_test','rCBV_test');
 
 if ~exist(fullfile(partitionPath),'dir'), mkdir(fullfile(partitionPath)); end
 
@@ -253,7 +251,7 @@ parfor j = startNum+2:length(subjects)
         z_coord = coords(3);                                       % Third number in the image position (patient)
         
         % Identifies perfusion map type
-        modality = identifyRAPIDModality(map_img, TTP_test, rCBV_test, rCBF_test, MTT_test);
+        modality = identify_rapid_modality(map_img, TTP_test, rCBV_test, rCBF_test, MTT_test);
         
         % Add coords to perfusion map type
         switch modality
@@ -355,11 +353,11 @@ parfor j = startNum+2:length(subjects)
         
         % Read in NCCT slices using DCM info
         NCCT_img_1 = dicomread(NCCT_name_1); NCCT_info_1 = dicominfo(NCCT_name_1);
-        NCCT_img_1 = convert_DICOM_to_uint8(NCCT_img_1,NCCT_info_1);
+        NCCT_img_1 = convert_dicom_to_uint8(NCCT_img_1,NCCT_info_1);
         NCCT_img_2 = dicomread(NCCT_name_2); NCCT_info_2 = dicominfo(NCCT_name_2);
-        NCCT_img_2 = convert_DICOM_to_uint8(NCCT_img_2,NCCT_info_2);
+        NCCT_img_2 = convert_dicom_to_uint8(NCCT_img_2,NCCT_info_2);
         NCCT_img_3 = dicomread(NCCT_name_3); NCCT_info_3 = dicominfo(NCCT_name_3);
-        NCCT_img_3 = convert_DICOM_to_uint8(NCCT_img_3,NCCT_info_3);
+        NCCT_img_3 = convert_dicom_to_uint8(NCCT_img_3,NCCT_info_3);
         
         % Apply brain mask to first offset slice
         NCCT_img_store_1 = NCCT_img_1;

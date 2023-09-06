@@ -16,7 +16,7 @@ p_deident = genpath('C:/Users/Simon Kato/Desktop/Research/REU/scripts/utilities/
 addpath(p_deident);
 
 input = 'C:\Users\skato1\Desktop\REU\data\patients_filter';
-patients = fixDir(input);
+patients = fix_dir(input);
 %% Create Mapping
 rng(23);
 real_assignments = randi(2,length(patients),1)-1;
@@ -26,7 +26,7 @@ predicted_assignments = abs(real_assignments - ones(length(patients),1));
 patientIDs = [];
 
 for i = 1 : length(patients)
-   curPatient = fixDir(fullfile(patients(i).folder, patients(i).name));
+   curPatient = fix_dir(fullfile(patients(i).folder, patients(i).name));
    patientIDs = [patientIDs; patients(i).name];
    movefile(fullfile(patients(i).folder, patients(i).name,'fake_images'), fullfile(patients(i).folder, patients(i).name, strcat('CTP_',int2str(predicted_assignments(i)))));
    movefile(fullfile(patients(i).folder, patients(i).name,'real_images'), fullfile(patients(i).folder, patients(i).name, strcat('CTP_',int2str(real_assignments(i)))));

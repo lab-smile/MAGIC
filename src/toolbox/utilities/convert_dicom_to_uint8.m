@@ -1,4 +1,4 @@
-function output_image = convert_DICOM_to_uint8(dcm_img,dcm_info)
+function output_image = convert_dicom_to_uint8(dcm_img,dcm_info)
 
 window_center = dcm_info.WindowCenter;
 window_width = dcm_info.WindowWidth;

@@ -58,7 +58,7 @@ function [] = partitionData(partitionPath,testSize)
 % test_size = 0.2; % Ideally between [0.1 and 0.2]
 % #########################################
 
-fprintf("Starting...splitData.m\n")
+fprintf("Starting...partitionData.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 % Set RNG to default
@@ -202,12 +202,12 @@ if ~exist(fullfile(path_ncct,'train'),'dir') && ~exist(fullfile(path_ncct,'val')
     moveFiles(unique_names_val,data_names_string,path_rcbv,val_path_rcbv)
     moveFiles(unique_names_test,data_names_string,path_rcbv,test_path_rcbv)
     
-    fprintf("Finished...splitData.m\n")
+    fprintf("Finished...partitionData.m\n")
     fprintf("------------------------------------------------------------------\n")
 
 else
     fprintf("Dataset already partitioned.\n")
-    fprintf("Finished...splitData.m\n")
+    fprintf("Finished...partitionData.m\n")
     fprintf("------------------------------------------------------------------\n")
 
 end

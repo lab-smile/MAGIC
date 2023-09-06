@@ -23,7 +23,7 @@ addpath(p_deident);
 addpath(p_deident);
 
 results = dir(results_path);
-results = fixDir(results);
+results = fix_dir(results);
 
 real_opts = spreadsheetImportOptions;
 real_opts.DataRange = 'B2:B63';

@@ -1,4 +1,4 @@
-function newImg = applyNCCTMask(oldImg,mask)
+function newImg = apply_ncct_mask(oldImg,mask)
     oldImg_r = oldImg(:,:,1);
     oldImg_g = oldImg(:,:,2);
     oldImg_b = oldImg(:,:,3);

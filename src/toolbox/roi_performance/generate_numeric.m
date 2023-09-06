@@ -61,17 +61,17 @@ connectedCompIC = 0;
 allMapping = importdata('id_mapping.xlsx');
 allMapping = string(allMapping);
 
-save_path = createPath(save_path);
-realImPath = createPath(realPath);
-synImPath = createPath(synPath);
-rapidPath = createPath(rapidPath);
+save_path = create_path(save_path);
+realImPath = create_path(realPath);
+synImPath = create_path(synPath);
+rapidPath = create_path(rapidPath);
 
 
 realIms = dir(realImPath);
-realIms = fixDir(realIms);
+realIms = fix_dir(realIms);
 
 synIms = dir(synImPath);
-synIms = fixDir(synIms);
+synIms = fix_dir(synIms);
 
 for i = 1: length(realIms)
     
@@ -80,18 +80,18 @@ for i = 1: length(realIms)
     mapped_folder = allMapping(mod(find(allMapping == curIm.name(1:8)), length(allMapping)));
     tempDirs = dir(fullfile(rapidPath, mapped_folder));
     
-    tempDirs = fixDir(tempDirs);
+    tempDirs = fix_dir(tempDirs);
     tempDir = tempDirs(1);
     
     subDirs = dir(fullfile(rapidPath, mapped_folder , '/', tempDir.name));
-    subDirs = fixDir(subDirs);
+    subDirs = fix_dir(subDirs);
     
     for j = 1 : length(subDirs)
         tempName = subDirs(j).name;
         tempName = replace(tempName,' ','_');
          if strcmp(tempName, 'RAPID_CT-P_Summary')
             files = dir(fullfile(subDirs(j).folder, '/', subDirs(j).name));
-            files = fixDir(files);
+            files = fix_dir(files);
 
             for fileNum = 1 : length(files)
                 curFile = strcat(files(fileNum).folder, '/', files(fileNum).name);

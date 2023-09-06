@@ -48,7 +48,7 @@ for i = 3:length(subjects)
         merge_flag = 1;
         % Start 3 to skip hidden dir . and ..
         for j = 3:length(dir_study)
-            if contains(dir_study(j).name,'CTA') && contains(dir_study(j).name,'WO-') % Gets the CTA folder name
+            if contains(dir_study(j).name,'CTA_') && contains(dir_study(j).name,'WO-') && contains(dir_study(j).name,'PERF_') % Gets the CTA folder name
                 cta_folder = dir_study(j).name;
             elseif contains(dir_study(j).name,'data_summary') % Skip data summary
                 continue;

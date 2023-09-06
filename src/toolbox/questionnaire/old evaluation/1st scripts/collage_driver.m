@@ -25,11 +25,11 @@ addpath(p_deident);
 all_image_path = 'C:\Users\skato1\Desktop\REU\data\patients_filter';
 
 %% Do not edit 
-all_images = fixDir(all_image_path);
+all_images = fix_dir(all_image_path);
 
 for i = 1 : length(all_images)
    cur_image_folder_path = strcat(all_images(i).folder, '\', all_images(i).name);
-   cur_image_folder = fixDir(cur_image_folder_path);
+   cur_image_folder = fix_dir(cur_image_folder_path);
    
    for j = 1 : length(cur_image_folder)
       modality = cur_image_folder(j);

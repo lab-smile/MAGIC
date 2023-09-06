@@ -22,7 +22,7 @@ addpath(p_deident);
 
 input = 'C:\Users\skato1\Desktop\REU\data\small_test';
 output = 'C:\Users\skato1\Desktop\REU\data\small_test_final';
-patients = fixDir(input);
+patients = fix_dir(input);
 %% Check if output is a folder, if not create it 
 
 if not(isfolder(output))

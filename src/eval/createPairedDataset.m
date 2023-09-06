@@ -32,19 +32,19 @@
 % #########################################
 close all; clear; clc;
 inputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset';
-resultsPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_results';
-outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_fakereal';
+resultsPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_results_pretrain';
+outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_paired_pretrain';
 % #########################################
 % Add utilities
 % - apply_image_denoising.m
 addpath('../toolbox/utilities')
 
-fprintf("Starting...generate_fake_real_folder.m\n")
+fprintf("Starting...createPairedDataset.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 % Constructing file paths
 real_folder = fullfile(inputPath,'test'); % Test input for model training
-fake_folder = resultsPath;
+fake_folder = fullfile(resultsPath,'results');
 
 % Post-processing method for image denoising. Median was used for final results
 method = 'median'; 
@@ -118,7 +118,7 @@ for i = 1:length(images)
     imwrite(ncct_r,fullfile(makeSubfolder(realsavepath,'NCCT'),imgname_real));
 
 end
-fprintf("Finished...fdas.m\n")
+fprintf("Finished...createPairedDataset.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 %% Local Functions

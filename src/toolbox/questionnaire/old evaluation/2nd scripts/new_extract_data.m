@@ -19,7 +19,7 @@ p_deident = genpath(utilities);
 addpath(p_deident);
 
 results = dir(results_path);
-results = fixDir(results);
+results = fix_dir(results);
 
 %% Setup the Import Options and import the data
 opts = spreadsheetImportOptions("NumVariables", 2);

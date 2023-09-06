@@ -1,4 +1,4 @@
-function [] = newp2pdataset(partitionPath,datasetPath)
+function [] = concatenateMaps(partitionPath,datasetPath)
 %% Description
 % The current use of the code is to concatenate the NCCT and CTP maps into
 % a single 1x5 image. This image will be used for training and testing in

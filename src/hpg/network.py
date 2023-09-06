@@ -5,15 +5,15 @@ import torch.nn.functional as F
 
 class generator(nn.Module):
     # initializers
-    def __init__(self, d=64, batch_size=1):
+    def __init__(self, d=64, batch_size=1, bn=False):
         super(generator, self).__init__()
 
 
-        bn = None
-        if batch_size == 1:
-          bn = False
-        else:
-          bn = True
+#        bn = None
+#        if batch_size == 1:
+#          bn = False
+#        else:
+#          bn = True
           
         
         # Unet encoder

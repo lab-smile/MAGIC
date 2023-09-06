@@ -43,12 +43,12 @@ p_deident = genpath(utilities);
 addpath(p_deident);
 %% Main Function
 
-datasetPath = createPath(datasetPath);
-save_path = createPath(save_path);
+datasetPath = create_path(datasetPath);
+save_path = create_path(save_path);
 patientList = importdata('patients.xlsx');
 
 niftiData = dir(datasetPath);
-niftiData = fixDir(niftiData);
+niftiData = fix_dir(niftiData);
 
 allDice = cell(1, length(niftiData)/2);
 

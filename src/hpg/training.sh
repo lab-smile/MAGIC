@@ -34,3 +34,6 @@ python pytorch_pix2pix.py --dataset $dataset \
   --save_root $save_root
 
 date
+
+
+python pytorch_pix2pix.py --dataset ../data/dataset --lrG 0.00005 --lrD 0.00005 --train_epoch 50 --save_root results --num_workers 8 --batch_size 8
