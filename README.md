@@ -1,11 +1,14 @@
-# Multitask, Automated Generation of Intermodal CT Perfusion Maps (MAGIC) via Generative Adversarial Networks
+<p align="center">
+  <img src="images/banner.png" width="750">
+</p>
+
+## About MAGIC
 
 Developed by the Smart Medical Informatics Learning & Evaluation (SMILE) Laboratory, Dept. of Biomedical Engineering, University of Florida. 
 - Originally created by Garrett Fullerton and Simon Kato.
 - Under the supervision of Ruogu Fang, Ph.D.
 - Currently maintained by Kyle See.
 
-## About MAGIC
 MAGIC is a novel, multitask deep network architecture that enables translation from non-contrast enhanced CT imaging to CT perfusion imaging maps. **This framework enables the synthesis of contrast-free perfusion imaging of the brain**. It is generalizable to other modalities of imaging as well.
 
 The novelties of this framework for the synthesis of contrast-free perfusion imaging, in comparison to other modern image-to-image architectures, are as follows: 
@@ -43,25 +46,44 @@ The discriminator utilizes a relatively simple _PatchGAN_ framework with a 70x70
 
 ## Pipeline Overview
 
-The MAGIC pipeline includes dataset processing, model training and validation, and model evaluation. Dataset processing is <u>***currently only capable of handling UF Health data***</u> that has been deidentified using the [DICOM-Deidentification](https://github.com/lab-smile/DICOM-Deidentification) toolbox. Other datasets may be used but will require specific preparation. The input format of MAGIC is described in the [Dataset Processing](#dataset-processing) below.
+The MAGIC pipeline includes <b>dataset processing, model training and validation, and model evaluation</b>. Dataset processing is <u>***currently only capable of handling UF Health data***</u> that has been deidentified using the [DICOM-Deidentification](https://github.com/lab-smile/DICOM-Deidentification) toolbox. Other datasets may be used but will require specific preparation. The input format of MAGIC is described in the [Dataset Processing](#dataset-processing) below.
+
+The MAGIC model training outputs a .pkl model. This .pkl model is subsequently used to evaluate the test images. Checkpoint models can be enabled at certain epoch intervals to save a .pkl model snapshot.
+
+The MAGIC evaluation scripts takes the output of the testing images along with the testing images itself to generate different comparisons between real and fake images. `generateSliceComparison`
 
 We provide a small sample training and testing set for 
+
 
 ### Requirements
 
 MATLAB code is known to work with MATLAB 2019b+
 
 ### Dataset Processing
+MAGIC takes a *specific input* of a **horizontally concatenated 256-by-1280 montage of slices of NCCT, MTT, TTP, CBF, and CBV in that order**. Additionally, data needs to be split into train, val, and test folders. The models will separate the images by itself. The dataset processing pipeline of this repository specifically takes <u>***deidentified UF Health data***</u>. Any external dataset is not immediately compatible with this specific pipeline. External datasets simply need to meet the input requirements stated above to train or test with MAGIC.
 
-The MAGIC pipeline takes a very
+- [matchNcctAndRapid.m](src/processing/matchNcctAndRapid.m) - Acquires pseudo-RGB NCCT slice and matching CTP slices.
+- [partitionData.m](src/processing/partitionData.m) - Organizes CT-perfusion map folders and partitions data into train, val, and test.
+- [concatenateMaps.m](src/processing/concatenateMaps.m) - Concatenate NCCT and CT-perfusion maps together.
 
-- [findSliceMatch_RAPID.m](src/processing/findSliceMatch_RAPID.m)  
-- [splitData.m](src/processing/splitData.m)
-- [newp2pdataset.m](src/processing/newp2pdataset.m)
+>Training and result evaluation use a different order of perfusion maps. Training input uses NCCT, MTT, TTP, CBF, and CBV. Result evaluation displays NCCT, CBV, CBF, MTT, and TTP.
+
+<p align="center">
+  <img src="images/dataprocessing.png">
+</p>
 
 ### Model Training
+MAGIC model training outputs a .pkl model. This .pkl model is used for testing. 
+
+- [pytorch_pix2pix.py](src/hpg/pytorch_pix2pix.py)
+- [pytorch_pix2pix_test.py](src/hpg/pytorch_pix2pix_test.py)
 
 ### Evaluation
+
+- [createPairedDataset.m](src/eval/createPairedDataset.m)
+- [generateSliceComparison.m](src/eval/generateSliceComparison.m)
+- [generateSliceReport.m](src/eval/generateSliceReport.m)
+
 
 ## Sample Dataset
 We provide a small sample training set for evaluation and introduction to this project's code. This can be found in [rapid_set_split_small](src/sample/). Contained in this dataset are two subfolders, for training and testing a model. The [training set](src/sample/train) contains 48 samples, and the [testing set](src/sample/test) contains 10 samples. The original MAGIC model was trained on over 16,000+ individual samples, but this sample set illustrates the program's functionality.

@@ -1,4 +1,15 @@
-## [0.0.3] - 2023-08-30
+## [0.1.1] - 2023-9-11
+### Added
+- `createdPairedDataset.m` Now creates RGB montage of perfusion maps after applying colormaps.
+- `README.md` Now has a banner and added more text.
+
+### Changed
+- `getMetrics.ipynb` Added comments and descriptions
+
+### Fixed
+- `pytorch_pix2pix_test.py` Now uses save_root to save results
+
+## [0.1.0] - 2023-08-30
 ### Added
 - `generateSliceReport.m` Vertically concatenates slices from a single subject generated from `generateSliceComparison.m`.
 

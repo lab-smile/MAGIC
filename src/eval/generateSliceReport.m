@@ -13,7 +13,7 @@
 %% Adjustable Variables
 % #########################################
 close all; clear; clc;
-evalPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_eval';
+evalPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data_eval';
 % #########################################
 
 fprintf("Starting...generateSliceReport.m\n")

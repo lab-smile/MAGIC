@@ -31,9 +31,9 @@
 %% Adjustable Variables
 % #########################################
 close all; clear; clc;
-inputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset';
-resultsPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_results_pretrain';
-outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_paired_pretrain';
+inputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data';
+resultsPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data_pretrain';
+outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data_paired';
 % #########################################
 % Add utilities
 % - apply_image_denoising.m
@@ -58,6 +58,8 @@ fprintf("------------------------------------------------------------------\n")
 if ~exist(outputPath,'dir'),mkdir(outputPath);end
 realsavepath = makeSubfolder(outputPath,'real_images');
 fakesavepath = makeSubfolder(outputPath,'fake_images');
+realslicepath = makeSubfolder(outputPath,'real_montage');
+fakeslicepath = makeSubfolder(outputPath,'fake_montage');
 
 % Prepare colormap
 load('Rapid_Colormap.mat');
@@ -116,8 +118,40 @@ for i = 1:length(images)
     saveImageFinal(rcbf_r, c_map, imgname_real, realsavepath, 'CBF');
     saveImageFinal(rcbv_r, c_map, imgname_real, realsavepath, 'CBV');
     imwrite(ncct_r,fullfile(makeSubfolder(realsavepath,'NCCT'),imgname_real));
-
 end
+
+% Loop through the modality images to re-create the montages for getMetrics
+for j = 1:length(images)
+    % Get subject ID
+    img = images(j);
+    imgname = img.name;
+    if strcmp(imgname(1),'.'), continue; end % Skip . and ..
+    
+    % Read all real images
+    ncct_r = imread(fullfile(realsavepath,'NCCT',imgname));
+    mtt_r = imread(fullfile(realsavepath,'MTT',imgname));
+    ttp_r = imread(fullfile(realsavepath,'TTP',imgname));
+    cbf_r = imread(fullfile(realsavepath,'CBF',imgname));
+    cbv_r = imread(fullfile(realsavepath,'CBV',imgname));
+    
+    ncct_r(:,:,2) = ncct_r(:,:,1);
+    ncct_r(:,:,3) = ncct_r(:,:,1);
+    
+    slice_r = cat(2,ncct_r,mtt_r,ttp_r,cbf_r,cbv_r);
+    savename_r = fullfile(realslicepath,imgname);
+    imwrite(slice_r,savename_r)
+
+    % Read all fake images
+    mtt_f = imread(fullfile(fakesavepath,'MTT',imgname));
+    ttp_f = imread(fullfile(fakesavepath,'TTP',imgname));
+    cbf_f = imread(fullfile(fakesavepath,'CBF',imgname));
+    cbv_f = imread(fullfile(fakesavepath,'CBV',imgname));
+    
+    slice_f = cat(2,mtt_f,ttp_f,cbf_f,cbv_f);
+    savename_f = fullfile(fakeslicepath,imgname);
+    imwrite(slice_f,savename_f)
+end
+
 fprintf("Finished...createPairedDataset.m\n")
 fprintf("------------------------------------------------------------------\n")
 

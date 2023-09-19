@@ -20,8 +20,8 @@
 %% Adjustable Variables
 % #########################################
 close all; clear; clc;
-pairedPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_paired';
-evalPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_eval';
+pairedPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data_paired';
+evalPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data_eval';
 % #########################################
 % Detect current filename? Expected png for a bit.
 
