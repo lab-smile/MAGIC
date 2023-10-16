@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/banner.png" width="750">
+  <img src="images/banner.png" width="600">
 </p>
 
 ## About MAGIC
@@ -46,43 +46,34 @@ The discriminator utilizes a relatively simple _PatchGAN_ framework with a 70x70
 
 ## Pipeline Overview
 
-The MAGIC pipeline includes <b>dataset processing, model training and validation, and model evaluation</b>. Dataset processing is <u>***currently only capable of handling UF Health data***</u> that has been deidentified using the [DICOM-Deidentification](https://github.com/lab-smile/DICOM-Deidentification) toolbox. Other datasets may be used but will require specific preparation. The input format of MAGIC is described in the [Dataset Processing](#dataset-processing) below.
-
-The MAGIC model training outputs a .pkl model. This .pkl model is subsequently used to evaluate the test images. Checkpoint models can be enabled at certain epoch intervals to save a .pkl model snapshot.
-
-The MAGIC evaluation scripts takes the output of the testing images along with the testing images itself to generate different comparisons between real and fake images. `generateSliceComparison`
-
-We provide a small sample training and testing set for 
-
-
 ### Requirements
-
 MATLAB code is known to work with MATLAB 2019b+
 
-### Dataset Processing
-MAGIC takes a *specific input* of a **horizontally concatenated 256-by-1280 montage of slices of NCCT, MTT, TTP, CBF, and CBV in that order**. Additionally, data needs to be split into train, val, and test folders. The models will separate the images by itself. The dataset processing pipeline of this repository specifically takes <u>***deidentified UF Health data***</u>. Any external dataset is not immediately compatible with this specific pipeline. External datasets simply need to meet the input requirements stated above to train or test with MAGIC.
+### Description
+The MAGIC pipeline includes <b>dataset processing, model training and validation, and model evaluation</b>. Dataset processing is <u>***currently only capable of handling UF Health data***</u> that has been deidentified using the [DICOM-Deidentification](https://github.com/lab-smile/DICOM-Deidentification) toolbox. Other datasets may be used but will require specific preparation. The input format of MAGIC is described in the [Dataset Processing](#dataset-processing) below.
 
-- [matchNcctAndRapid.m](src/processing/matchNcctAndRapid.m) - Acquires pseudo-RGB NCCT slice and matching CTP slices.
-- [partitionData.m](src/processing/partitionData.m) - Organizes CT-perfusion map folders and partitions data into train, val, and test.
-- [concatenateMaps.m](src/processing/concatenateMaps.m) - Concatenate NCCT and CT-perfusion maps together.
+<p align="center">
+  <img src="images/overview.png" width="850">
+</p>
+
+
+
+### Dataset Processing
+MAGIC takes a *specific input* of a **horizontally concatenated 256-by-1280 montage of slices of NCCT, MTT, TTP, CBF, and CBV in that order**. Additionally, data needs to be split into train, val (optional), and test folders. The models will separate the images by itself. The dataset processing pipeline of this repository specifically takes <u>***deidentified UF Health data***</u>. Any external dataset is not immediately compatible with this specific pipeline. External datasets simply need to meet the input requirements stated above to train or test with MAGIC.
 
 >Training and result evaluation use a different order of perfusion maps. Training input uses NCCT, MTT, TTP, CBF, and CBV. Result evaluation displays NCCT, CBV, CBF, MTT, and TTP.
 
-<p align="center">
-  <img src="images/dataprocessing.png">
-</p>
+The format of our dataset uses matched z-location slices between NCCT and CTP maps. The grayscale NCCT slice combines two 4mm offset slices to create a pseudo-RGB image. Slices are spaced 10mm apart. CTP maps are 3-channel grayscale images used for training.
 
 ### Model Training
-MAGIC model training outputs a .pkl model. This .pkl model is used for testing. 
-
-- [pytorch_pix2pix.py](src/hpg/pytorch_pix2pix.py)
-- [pytorch_pix2pix_test.py](src/hpg/pytorch_pix2pix_test.py)
+MAGIC training uses `pytorch_pix2pix.py` and outputs a .pkl model. This .pkl model is used in `pytorch_pix2pix_test.py` for testing. Checkpoint models can be saved every N epochs using `--checkpoint N`. Histograms are saved to display loss curves. Shell scripts are used to run models through high performance computing.
 
 ### Evaluation
-
+MAGIC uses the testing data and result output from MAGIC testing for evaluation. `createPairedDataset.m` pairs the testing data and results for the evaluation scripts. `generateSliceReport.m` uses 
 - [createPairedDataset.m](src/eval/createPairedDataset.m)
 - [generateSliceComparison.m](src/eval/generateSliceComparison.m)
 - [generateSliceReport.m](src/eval/generateSliceReport.m)
+- [getMetrics.ipynb](src/eval/getMetrics.ipynb)
 
 
 ## Sample Dataset

@@ -1,7 +1,36 @@
+## [0.1.3] - 2023-10-16
+### Added
+- `matchNCCTandFSTROKE.m` Performs similar function to `matchNcctandRapid.m` but handles different inputs. NCCT and perfusion maps are expected in different folders instead of one.
+
+### Changed
+- `matchNcctAndRapid.m` Renamed to `matchNCCTandRAPID.m` to match the new matching script.
+
+### Fixed
+- `matchNCCTandRAPID.m` Renamed testing variables to reflect new argument names.
+
+## [0.1.2] - 2023-9-21
+### Added
+- `pytorch_pix2pix.py` Added overall SSIM loss
+- `pytorch_pix2pix.py` Added SSIM loss as option for generator loss
+- `pytorch_pix2pix.py` Added random resized crop, vertical flip, horizontal flip, and angle augmentations.
+- `inspectDataset.m` Added visualization of progress by printing saved filenames.
+- `createPairedDataset.m` Now prints images that are saved for progress.
+- `README.md` Added more text.
+
+### Changed
+- `pytorch_pix2pix.py` Rearranged arguments and renamed scaling factor lambda
+
+### Fixed
+- `getMetrics.ipynb` Resolved an issue of SSIM not correctly handling float type images.
+- `inspectDataset.m` Resolved an issue where figures are never closed resulting in large memory pools.
+- `pytorch_pix2pix.py` Fixed SSIM in multimodal loss
+
 ## [0.1.1] - 2023-9-11
 ### Added
+- `inspectDataset.m` Performs the same steps in `createPairedDataset.m`, `generateSliceComparison.m`, and `generateSliceReport.m` to view your entire (train+test) dataset.
 - `createdPairedDataset.m` Now creates RGB montage of perfusion maps after applying colormaps.
 - `README.md` Now has a banner and added more text.
+- `getMetrics.ipynb` Added mean and standard deviation sheet to summarize results.
 
 ### Changed
 - `getMetrics.ipynb` Added comments and descriptions

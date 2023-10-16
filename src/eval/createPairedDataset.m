@@ -31,9 +31,9 @@
 %% Adjustable Variables
 % #########################################
 close all; clear; clc;
-inputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data';
-resultsPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data_pretrain';
-outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\new_augmented_data_paired';
+inputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A3';
+resultsPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A3_results';
+outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A3_results_paired';
 % #########################################
 % Add utilities
 % - apply_image_denoising.m
@@ -118,6 +118,7 @@ for i = 1:length(images)
     saveImageFinal(rcbf_r, c_map, imgname_real, realsavepath, 'CBF');
     saveImageFinal(rcbv_r, c_map, imgname_real, realsavepath, 'CBV');
     imwrite(ncct_r,fullfile(makeSubfolder(realsavepath,'NCCT'),imgname_real));
+    fprintf("Saved %s\n",imgname_real)
 end
 
 % Loop through the modality images to re-create the montages for getMetrics

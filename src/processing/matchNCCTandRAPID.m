@@ -1,4 +1,4 @@
-function [] = matchNcctAndRapid(deidPath,partitionPath)
+% function [] = matchNCCTandRAPID(deidPath,partitionPath)
 %% Match NCCT and CTP Perfusion Map Slices
 % This is the main function for matching NCCT and CTP perfusion map slices.
 % This function requires that the dataset contain NCCT and Perfusion Map
@@ -18,7 +18,7 @@ function [] = matchNcctAndRapid(deidPath,partitionPath)
 % 
 %   Input:
 %       deidPath     - Path to source folder containing deid subjects.
-%       outputPath   - Path to output folder to store partitioned data.
+%       partitionPath   - Path to output folder to store partitioned data.
 % 
 %----------------------------------------
 % Last Updated: 8/22/2023 by KS
@@ -60,15 +60,15 @@ function [] = matchNcctAndRapid(deidPath,partitionPath)
 
 %% Adjustable Variables
 %#########################################
-% clc; clear; close all; warning off;
-% % Input folder - folders must follow the order
-% % > Subject -> Study -> Session -> Image
-% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test';
-% % Output folder - will be created
-% outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_output';
+clc; clear; close all; warning off;
+% Input folder - folders must follow the order
+% > Subject -> Study -> Session -> Image
+deidPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_deid';
+% Output folder - will be created
+partitionPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_partition';
 %#########################################
-
-fprintf("Starting...matchNcctAndRapid.m\n")
+addpath('../toolbox/utilities')
+fprintf("Starting...matchNCCTandRAPID.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 % Fix any issues with study or series folders
@@ -84,6 +84,7 @@ fix_series(deidPath)
 % - parsave.m
 % - pct_brainMask_noEyes.m
 % - rapid_modalities.mat
+% - identify_rapid_modalities.m
 addpath('../toolbox/utilities')
 
 % What is this? It is 3-columns with values in them.
@@ -129,9 +130,6 @@ if ~exist(MTTPath,'dir'), mkdir(MTTPath); end
 %if ~exist(DelayPath,'dir'), mkdir(DelayPath); end
 if ~exist(NCCTsavePath,'dir'), mkdir(NCCTsavePath); end
 
-%skipped_subjects = struct;
-skip_idx = 1;
-
 % Checkpoint files to skip subjects.
 flagPath = fullfile(deidPath,'completed');
 if ~exist(flagPath,'dir'), mkdir(flagPath); end
@@ -141,7 +139,7 @@ subjects(end) = [];
 
 %% Get all file paths in one place
 % Loop through all subjects in input folder (skips hidden)
-parfor j = startNum+2:length(subjects)
+for j = startNum+2:length(subjects)
     
     % Grab subject name
     subject = subjects(j);
@@ -236,6 +234,7 @@ parfor j = startNum+2:length(subjects)
         NCCT_info = dicominfo(NCCT_filepath);                      % Read NCCT dcm info
         coords = NCCT_info.ImagePositionPatient;                   % Read Image Position (Patient) field
         z_coord = coords(3);                                       % Third number in the image position (patient)
+        disp(z_coord)
         NCCT_zcoords(z_coord) = NCCT_filepath;
     end
     
@@ -434,10 +433,10 @@ parfor j = startNum+2:length(subjects)
     fprintf('> Finished with subject %s\n',subject_name);
 end
 fprintf("------------------------------------------------------------------\n")
-fprintf("Finished...matchNcctAndRapid.m\n")
+fprintf("Finished...matchNCCTandRAPID.m\n")
 fprintf("------------------------------------------------------------------\n")
 
-end
+% end
 
 %% Local Functions
 function FINAL_img = getCorrectImage(MODALITY_zcoords,TEST_IMG)

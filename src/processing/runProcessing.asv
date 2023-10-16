@@ -43,7 +43,7 @@ test_ratio = 0.2;
 %#########################################
 addpath('../toolbox/utilities')
 
-matchNCCTandRAPID(deid_path,partition_path)
+matchNcctAndRapid(deid_path,partition_path)
 % partitionData(partition_path,test_ratio)
 % concatenateMaps(partition_path,dataset_path)
 % end
