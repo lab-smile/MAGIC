@@ -3,7 +3,8 @@
 - `matchNCCTandFSTROKE.m` Performs similar function to `matchNcctandRapid.m` but handles different inputs. NCCT and perfusion maps are expected in different folders instead of one.
 
 ### Changed
-- `matchNcctAndRapid.m` Renamed to `matchNCCTandRAPID.m` to match the new matching script.
+- `matchNCCTAndRAPID.m` Renamed from `matchNcctAndRapid.m` to match the new matching script.
+- `matchNCCTandRAPID.m` Updated description to include expected data format.
 
 ### Fixed
 - `matchNCCTandRAPID.m` Renamed testing variables to reflect new argument names.

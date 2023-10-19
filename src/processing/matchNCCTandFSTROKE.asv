@@ -178,20 +178,14 @@ for i = 1:length(subjects)
         
         % CBF 0-60 CBV 0-4 MTT 0-12 TTP 0-25
         
-        CBV_path = fullfile(fstrokePath,subject_name,'ttp.nii.gz');
+        CBV_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
         CBV = niftiread(CBV_path);
-
         CBV_slice = imrotate(uint8(CBV(:,:,170)),270);
-        CBV_slice = imresize(CBV_slice,[256 256]);
-        CBV_slice(~mask)= 0;
         imshow(CBV_slice)
+        CBV_slice = imadjust(CBV_slice, [0 1], [0.2 0.8]);
+        figure; imshow(CBV_slice)
         
-        test = uint8(CBV(:,:,170));
-        originalRange = [min(CBV_slice(:)), max(CBV_slice(:))];
-        desiredRange = [0, 25];
-        
-        CBV_slice = (CBV_slice - originalRange(1)) / (originalRange(2) - originalRange(1)) * (desiredRange(2) - desiredRange(1)) + desiredRange(1);
-        figure; imshow(CBV_slice, [0 25])
+        test = CBV(:,:,1
     end
 
 end
