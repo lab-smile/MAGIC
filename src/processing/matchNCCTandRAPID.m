@@ -65,9 +65,9 @@
 clc; clear; close all; warning off;
 % Input folder - folders must follow the order
 % > Subject -> Study -> Session -> Image
-deidPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_deid';
+deidPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_deid';
 % Output folder - will be created
-partitionPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_partition';
+partitionPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_partition';
 %#########################################
 
 %% Initialization

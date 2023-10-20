@@ -179,21 +179,20 @@ for i = 1:length(subjects)
         % Convert perfusion map to specific ranges
         % -- CBF: 0-60, CBV: 0-4, MTT: 0-12, TTP: 0-25
         close all;
-        CBV_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
+        CBF_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
         % processPerf(CBF_path,partitionPath,subject_name,ii*2,mask,'cbf')
 
 
         CBV = niftiread(CBV_path);
 
-        CBV_slice = imrotate(CBV(:,:,ii*2),270);
-        CBV_slice = uint8(normalize(CBV_slice,"range",[0 60]));
+        CBV_slice = imrotate(uint8(CBV(:,:,ii*2)),270);
         CBV_slice = imresize(CBV_slice,[256 256]);
         CBV_slice(~mask)= 0;
         imshow(CBV_slice, [0 60])
         
+        CBV_slice = uint8(normalize(CBV_slice,"range",[0 12]));
         
-        
-        figure; imshow(CBV_slice, [0 60])
+        figure; imshow(CBV_slice, [0 12])
     end
 
 end
