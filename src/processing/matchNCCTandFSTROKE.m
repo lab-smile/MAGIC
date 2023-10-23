@@ -13,7 +13,7 @@
 % uint8.
 % 
 % Expect CTP perfusion maps to be from FSTROKE with 0.5mm resolution with
-% 320 slices. Each .nii.gz file contains 512x512x320
+% 320 slices. Each .nii.gz file contains 512x512x320 single.
 % 
 %   Kyle See 10/16/2023
 %   Smart Medical Informatics Learning and Evaluation (SMILE) Laboratory
@@ -73,7 +73,7 @@ if ~exist(MTTPath,'dir'), mkdir(MTTPath); end
 if ~exist(NCCTsavePath,'dir'), mkdir(NCCTsavePath); end
 
 NCCT_slice_offset = 4; % How many offset slices from main slice
-offset_range = NCCT_slice_offset*2+1;
+offset_range = NCCT_slice_offset*2+1; % Range for 1 NCCT slice
 dsize = 7; % Disk radius for morphological closing, used in Fang's PCT function (originally 7)
 ub = 200; % Upperbound, used in Fang's PCT function
 
@@ -157,7 +157,7 @@ for i = 1:length(subjects)
     for jj = 1:length(slices)
         ii = slices(jj);
 
-        % Process NCCT slice given img and info. Apply to offset slices
+        % Process NCCT slice given img and info. Repeat with offset slices
         NCCT_file = NCCT_files(ii);
         NCCT_img = processNCCT(NCCT_file, ub, dsize);
         
@@ -175,55 +175,78 @@ for i = 1:length(subjects)
         
         % Concatenate all 3 slices together
         NCCT_img = cat(3, NCCTminus_img, NCCT_img, NCCTplus_img);
+
+        % Save NCCT image
+        saveName = strcat(subject_name,'_',num2str(jj),'.png');
+        savePath = fullfile(partitionPath,'NCCT',saveName);
+        imwrite(NCCT_img,savePath)
         
-        % Convert perfusion map to specific ranges
+        % Convert perfusion map to specific ranges and save appropriately
         % -- CBF: 0-60, CBV: 0-4, MTT: 0-12, TTP: 0-25
-        close all;
-        CBV_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
-        % processPerf(CBF_path,partitionPath,subject_name,ii*2,mask,'cbf')
+        CBF_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
+        processPerf(CBF_path,partitionPath,subject_name,ii,jj,mask,'cbf')
 
+        CBV_path = fullfile(fstrokePath,subject_name,'cbv.nii.gz');
+        processPerf(CBV_path,partitionPath,subject_name,ii,jj,mask,'cbv')
 
-        CBV = niftiread(CBV_path);
+        MTT_path = fullfile(fstrokePath,subject_name,'mtt.nii.gz');
+        processPerf(MTT_path,partitionPath,subject_name,ii,jj,mask,'mtt')
 
-        CBV_slice = imrotate(CBV(:,:,ii*2),270);
-        CBV_slice = uint8(normalize(CBV_slice,"range",[0 60]));
-        CBV_slice = imresize(CBV_slice,[256 256]);
-        CBV_slice(~mask)= 0;
-        imshow(CBV_slice, [0 60])
+        TTP_path = fullfile(fstrokePath,subject_name,'tmax.nii.gz');
+        processPerf(TTP_path,partitionPath,subject_name,ii,jj,mask,'ttp')
         
-        
-        
-        figure; imshow(CBV_slice, [0 60])
     end
-
+    fileID = fopen(flagFile,'w');
+    fclose(fileID);
+    fprintf('> Finished with subject %s\n',subject_name);
 end
+fprintf("------------------------------------------------------------------\n")
+fprintf("Finished...matchNCCTandFSTROKE.m\n")
+fprintf("------------------------------------------------------------------\n")
 
 % end
 
 %% Local Functions
-function processPerf(dataPath,partitionPath,subject_name,loc,mask,type)
-    % Process perfusion map
+function processPerf(dataPath,partitionPath,subject_name,loc,jj,mask,type)
+    % -- Process perfusion map and save based on type --
+    % To debug how slices look:
+    % imshow(CBV_slice, [0 25])
+    % figure; imshow(CBV_slice, [0 25])
+
+    % 
     map = niftiread(dataPath);
-    slice = uint8(map(:,:,loc*2));
-    slice = imrotate(slice,270);
-    slice = imresize(slice,[256 256]);
-    slice(~mask) = 0;
-    if type == 'cbf'
-        slice = uint8(normalize(slice,"range",[0 60]));
-        imshow(slice, [0 60])
+    slice = imrotate(map(:,:,loc*2),270);
+    slice = uint8(normalize(slice,"range",[0 60]));
+    slice = imresize(slice,[256 256]); % Resize after making all changes
+    slice(~mask) = 0; % Apply mask
+    if type == 'cbf' 
         saveName = strcat(subject_name,'_',num2str(jj),'.png');
         savePath = fullfile(partitionPath,'rCBF',saveName);
-        saveas(gcf,savePath)
+        figure('Visible','off')
+        imshow(slice,[0 60])
+        exportgraphics(gcf,savePath)
         close;
     elseif type == 'cbv'
-        slice = uint8(normalize(slice,"range",[0 4]));
-        imshow(slice, [0 4])
+        saveName = strcat(subject_name,'_',num2str(jj),'.png');
+        savePath = fullfile(partitionPath,'rCBV',saveName);
+        figure('Visible','off')
+        imshow(slice,[0 60])
+        exportgraphics(gcf,savePath)
+        close;
     elseif type == 'mtt'
-        slice = uint8(normalize(slice,"range",[0 12]));
-        imshow(slice, [0 12])
+        saveName = strcat(subject_name,'_',num2str(jj),'.png');
+        savePath = fullfile(partitionPath,'MTT',saveName);
+        figure('Visible','off')
+        imshow(slice,[0 60])
+        exportgraphics(gcf,savePath)
+        close;
     elseif type == 'ttp'
-        slice = uint8(normalize(slice,"range",[0 25]));
-        imshow(slice, [0 25])
+        saveName = strcat(subject_name,'_',num2str(jj),'.png');
+        savePath = fullfile(partitionPath,'TTP',saveName);
+        figure('Visible','off')
+        imshow(slice,[0 60])
+        exportgraphics(gcf,savePath)
+        close;
     else
         fprintf("Perfusion type unrecognized")
     end
@@ -231,13 +254,21 @@ function processPerf(dataPath,partitionPath,subject_name,loc,mask,type)
 end
 
 function img = processNCCT(file, ub, dsize)
+    % -- Process NCCT using pct tools to mask twice --
+    % Read dicom image and metadata
     filepath = fullfile(file.folder, file.name);
     img = dicomread(filepath);
     info = dicominfo(filepath);
+    
+    % Use metadata to resize and rescale img data
     img = convert_dicom_to_uint8(img,info);
+    
+    % Apply harsh mask then smooth mask
     mask = pct_brainMask_noEyes(img, 0, ub, dsize);
     img(~mask) = 0;
     mask2 = pct_brainMask_noEyes(img, 0, ub, 4);
     img(~mask2) = 0;
+    
+    % Resize to 256x256
     img = imresize(img,[256 256]);
 end
