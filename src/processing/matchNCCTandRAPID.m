@@ -24,8 +24,8 @@
 %   Biomedical Engineering
 % 
 %   Input:
-%       deidPath     - Path to source folder containing deid subjects.
-%       partitionPath   - Path to output folder to store partitioned data.
+%       deidPath       - Path to source folder containing deid subjects.
+%       partitionPath  - Path to output folder to store partitioned data.
 % 
 %----------------------------------------
 % Last Updated: 10/17/2023 by KS

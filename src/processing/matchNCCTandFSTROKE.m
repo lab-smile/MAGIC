@@ -15,14 +15,16 @@
 % Expect CTP perfusion maps to be from FSTROKE with 0.5mm resolution with
 % 320 slices. Each .nii.gz file contains 512x512x320 single.
 % 
+% Requires at least MATLAB 2020a (for exportgraphics)
+% 
 %   Kyle See 10/16/2023
 %   Smart Medical Informatics Learning and Evaluation (SMILE) Laboratory
 %   Biomedical Engineering
 % 
 %   Input:
-%       deidPath     - Path to source folder containing deid subjects (NCCT).
-%       fstrokePath  - Path to source folder containing fstroke outputs.
-%       outputPath   - Path to output folder to store partitioned data.
+%       deidPath       - Path to source folder containing deid subjects (NCCT).
+%       fstrokePath    - Path to source folder containing fstroke outputs.
+%       partitionPath  - Path to output folder to store partitioned data.
 % 
 %----------------------------------------
 % Last Updated: 10/16/2023 by KS
