@@ -33,12 +33,11 @@
 %#########################################
 clc; clear; close all; warning off;
 % Input path MUST contain the unzipped TRAINING and TESTING folders.
-inputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\isles_deid';
-partitionPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\isles_partition';
+inputPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\isles_deid';
+partitionPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\isles_partition';
 %#########################################
 
 %% Initialization
-
 fprintf("Starting...matchISLES2018.m\n")
 fprintf("------------------------------------------------------------------\n")
 
@@ -79,48 +78,43 @@ for i = 1:94
     mtt = niftiread(fullfile(baseDir(5).folder,baseDir(5).name,strcat(baseDir(5).name,'.nii')));
     tmax = niftiread(fullfile(baseDir(6).folder,baseDir(6).name,strcat(baseDir(6).name,'.nii')));
 
-    % CT looks best with 100
-    % CBF looks best with 1000
-    % CBV looks best with 100
-    % MTT looks best with 20
-    % Tmax looks best with 20
-    
+    % Cycle through all of the slices
     num_slices = size(cbf,3);
-    
     for j = 1:num_slices
         if i < 10
-            saveName = strcat('10000',num2str(i),'_01.png');
+            saveName = strcat('10000',num2str(i),'_0',num2str(j),'.png');
         else
-            saveName = strcat('1000',num2str(i),'_01.png');
+            saveName = strcat('1000',num2str(i),'_',num2str(j),'.png');
         end
         
+        % Copy image twice to simulate pseudo-RGB input
         savePathNCCT = fullfile(partitionPath,'NCCT',saveName);
-        figure('Visible','off');
-        imshow(imrotate(ct(:,:,j),90),[0 100])
-        saveas(gcf,savePathNCCT,'png')
-        close;
+        sliceNCCT = imrotate(ct(:,:,j),90);
+        sliceNCCT(:,:,2) = imrotate(ct(:,:,j),90);
+        sliceNCCT(:,:,3) = imrotate(ct(:,:,j),90);
+        sliceNCCT = uint8(sliceNCCT);
+        imwrite(sliceNCCT,savePathNCCT)
         
         savePathCBF = fullfile(partitionPath,'rCBF',saveName);
-        figure('Visible','off');
-        imshow(imrotate(cbf(:,:,j),90),[0 100])
-        saveas(gcf,savePathCBF,'png')
-        close;
+        sliceCBF = uint8(imrotate(cbf(:,:,j),90));
+        sliceCBF = imadjust(sliceCBF);
+        imwrite(sliceCBF,savePathCBF)
         
         savePathCBV = fullfile(partitionPath,'rCBV',saveName);
-        figure('Visible','off');
-        imshow(imrotate(cbf(:,:,j),90),[0 100])
-        saveas(gcf,savePathCBF,'png')
-        close;
+        sliceCBV = uint8(imrotate(cbv(:,:,j),90));
+        sliceCBV = imadjust(sliceCBV);
+        imwrite(sliceCBV,savePathCBV)
         
+        savePathMTT = fullfile(partitionPath,'MTT',saveName);
+        sliceMTT = uint8(imrotate(mtt(:,:,j),90));
+        sliceMTT = imadjust(sliceMTT);
+        imwrite(sliceMTT,savePathMTT)
+        
+        savePathTTP = fullfile(partitionPath,'TTP',saveName);
+        sliceTTP = uint8(imrotate(tmax(:,:,j),90));
+        sliceTTP = imadjust(sliceTTP);
+        imwrite(sliceTTP,savePathTTP)
     end
-    
-    slice_count = [slice_count num_slices];
-    figure;
-    for j = 1:num_slices
-        subplot(2,4,j)
-        imshow(imrotate(ct(:,:,j),90),[0 100])
-    end
-    close;
 end
 
 % end

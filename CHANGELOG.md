@@ -1,3 +1,8 @@
+## [0.1.4] - 2023-10-25
+### Fixed
+- `matchNCCTandFSTROKE.m` Resolved an issue where maps are saved with larger dimensions than expected. Now using imadjust() with imwrite() instead of exportgraphics().
+- `matchISLES2018.m` Resolved an issue where maps are saved with larger dimensions than expected. Now using imadjust() with imwrite() instead of exportgraphics().
+
 ## [0.1.3] - 2023-10-16
 ### Added
 - `matchNCCTandFSTROKE.m` Performs similar function to `matchNCCTandRAPID.m` but handles different inputs. NCCT and perfusion maps are expected in different folders instead of one.

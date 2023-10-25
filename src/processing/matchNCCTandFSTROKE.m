@@ -15,8 +15,6 @@
 % Expect CTP perfusion maps to be from FSTROKE with 0.5mm resolution with
 % 320 slices. Each .nii.gz file contains 512x512x320 single.
 % 
-% Requires at least MATLAB 2020a (for exportgraphics)
-% 
 %   Kyle See 10/16/2023
 %   Smart Medical Informatics Learning and Evaluation (SMILE) Laboratory
 %   Biomedical Engineering
@@ -219,36 +217,25 @@ function processPerf(dataPath,partitionPath,subject_name,loc,jj,mask,type)
     map = niftiread(dataPath);
     slice = imrotate(map(:,:,loc*2),270);
     slice = uint8(normalize(slice,"range",[0 60]));
+    slice = imadjust(slice);
     slice = imresize(slice,[256 256]); % Resize after making all changes
     slice(~mask) = 0; % Apply mask
     if type == 'cbf' 
         saveName = strcat(subject_name,'_',num2str(jj),'.png');
         savePath = fullfile(partitionPath,'rCBF',saveName);
-        figure('Visible','off')
-        imshow(slice,[0 60])
-        exportgraphics(gcf,savePath)
-        close;
+        imwrite(slice,savePath)
     elseif type == 'cbv'
         saveName = strcat(subject_name,'_',num2str(jj),'.png');
         savePath = fullfile(partitionPath,'rCBV',saveName);
-        figure('Visible','off')
-        imshow(slice,[0 60])
-        exportgraphics(gcf,savePath)
-        close;
+        imwrite(slice,savePath)
     elseif type == 'mtt'
         saveName = strcat(subject_name,'_',num2str(jj),'.png');
         savePath = fullfile(partitionPath,'MTT',saveName);
-        figure('Visible','off')
-        imshow(slice,[0 60])
-        exportgraphics(gcf,savePath)
-        close;
+        imwrite(slice,savePath)
     elseif type == 'ttp'
         saveName = strcat(subject_name,'_',num2str(jj),'.png');
         savePath = fullfile(partitionPath,'TTP',saveName);
-        figure('Visible','off')
-        imshow(slice,[0 60])
-        exportgraphics(gcf,savePath)
-        close;
+        imwrite(slice,savePath)
     else
         fprintf("Perfusion type unrecognized")
     end
