@@ -42,7 +42,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ])
 test_loader = util.data_load(opt.dataset, opt.test_subfolder, transform, batch_size=1, shuffle=False)
-results_folder = opt.dataset + '_results/' + 'results'
+results_folder = opt.dataset + '_' + opt.save_root +'/' + 'results'
 
 # Check batch size
 if opt.batch_size > len(test_loader):

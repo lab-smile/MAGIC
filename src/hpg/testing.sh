@@ -31,10 +31,7 @@ python pytorch_pix2pix_test.py --dataset $dataset --save_root $save_root --model
 
 date
 
-python pytorch_pix2pix_test.py --dataset ../data/dataset --save_root results --model_path ../data/dataset_results/models/dataset_generator_param_final.pkl --batch_norm True
+python pytorch_pix2pix_test.py --dataset ../data/dataset_A2 --save_root results --model_path ../data/dataset_A2_results/models/dataset_A2_generator_param_final.pkl --batch_norm True
 
-python pytorch_pix2pix_test.py --dataset ../data/dataset --save_root results --model_path ./MAGIC_Generator_FINAL-v2.pkl --batch_norm True
+python pytorch_pix2pix_test.py --dataset ../data/new_augmented_data --save_root pretrain --model_path ./MAGIC_Generator_FINAL-v2.pkl --batch_norm True
 
-
-
-python pytorch_pix2pix_test.py --dataset ../data/dataset_sample --save_root results --model_path ../data/dataset_sample_results/models/dataset_sample_generator_param_final.pkl

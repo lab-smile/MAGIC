@@ -1,3 +1,19 @@
+## [0.1.5] - 2023-11-07
+### Added
+- `pytorch_pix2pix.py` Wasserstein loss for generator.
+- `pytorch_pix2pix.py` L2 loss (MSELoss).
+
+### Changed
+- `pytorch_pix2pix.py` A number of changes are made to streamline model comparisons.
+    - Dataset and models are now reflected on folder name `dataset_NAME_EXPERIMENT` --> `dataset_NAME_model_EXPERIMENT`
+    - Training histograms moved to a separate folder `training_histograms`.
+    - Model weights are moved to a separate folder `model_weights`.
+    - Validation are moved to a separate folder `validation_results`.
+    - Test outputs are moved to a separate folder `test_results`.
+    - Training histograms renamed `dataset_NAME_train_hist.pkl` --> `train_hist.pkl`
+    - Generator weights renamed `dataset_NAME_generator_param_final.pkl` --> `generator_param_final.pkl`
+    - Discriminator weights renamed `dataset_NAME_discriminator_param.pkl` --> `discriminator_param.pkl`
+
 ## [0.1.4] - 2023-10-25
 ### Fixed
 - `matchNCCTandFSTROKE.m` Resolved an issue where maps are saved with larger dimensions than expected. Now using imadjust() with imwrite() instead of exportgraphics().

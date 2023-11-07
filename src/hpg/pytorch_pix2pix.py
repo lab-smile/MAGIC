@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', required=False, default='sample_data',  help='dataset path')
 parser.add_argument('--model_name', required=False, default='sample_data', help='model name')
 parser.add_argument('--train_subfolder', required=False, default='train',  help='')
-parser.add_argument('--val_subfolder', required=False, default='test',  help='')
+parser.add_argument('--val_subfolder', required=False, default='val',  help='')
 parser.add_argument('--save_root', required=False, default='results', help='results save path')
 
 parser.add_argument('--batch_size', type=int, default=1, help='train batch size')
@@ -33,9 +33,14 @@ parser.add_argument('--train_epoch', type=int, default=100, help='number of trai
 parser.add_argument('--lrD', type=float, default=0.0002, help='learning rate, default=0.0002')
 parser.add_argument('--lrG', type=float, default=0.0002, help='learning rate, default=0.0002')
 
-parser.add_argument('--L1_lambda1', type=float, default=100, help='lambda for L1 loss')
-parser.add_argument('--extrema_lambda2', type=float, default=100, help='scaling factor for extrema loss')
-parser.add_argument('--mml_lambda3', type=float, default=100, help='scaling factor for multimodal loss')
+parser.add_argument('--gen_lambda', type=float, default=100, help='scaling factor for generator loss')
+parser.add_argument('--ext_lambda', type=float, default=100, help='scaling factor for extrema loss')
+parser.add_argument('--mml_lambda', type=float, default=100, help='scaling factor for multimodal loss')
+parser.add_argument('--gen_mode',default='L1',help='[ L1 | ssim ] loss used for generator loss')
+parser.add_argument('--mml_mode',default='L1',help='[ L1 | ssim | correlation ] loss used for multimodal loss')
+parser.add_argument('--use_extrema_loss',default=True)
+parser.add_argument('--use_multimodal_loss',default=True) # fix for ssim and corr, l1 is fine
+
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for Adam optimizer')
 parser.add_argument('--beta2', type=float, default=0.999, help='beta2 for Adam optimizer')
 parser.add_argument('--n_epochs', type=int, default=75, help='number of epochs with the initial learning rate')
@@ -47,18 +52,23 @@ parser.add_argument('--use_checkpoint',default=True, help='save the model at a s
 parser.add_argument('--save_freq', type=int, default=10, help='save the model after n epochs as a checkpoint')
 parser.add_argument('--save_fig_freq', type=int, default=10, help='how often to save loss histogram')
 parser.add_argument('--num_show', type=int, default=5, help='how many validation images to show per slide after each epoch')
+parser.add_argument('--use_augmentations',default=True)
 
-parser.add_argument('--use_extrema_loss',default=True)
-parser.add_argument('--use_multimodal_loss',default=True) # fix for ssim and corr, l1 is fine
-parser.add_argument('--mml_mode',default='L1',help='[ L1 | ssim | correlation ] type used for multimodal loss')
 parser.add_argument('--num_workers',type=int,default=1)
 
-parser.add_argument('--random_flip',default=True)
+# Just testing the training portion
+# module load conda
+# conda activate magic_env
+# cd /blue/ruogu.fang/kylebsee/MAGIC/hpg
 
 def get_folder_name(path_or_folder):
     # Handles both relative and absolute paths for the model name.
     folder_name = os.path.basename(path_or_folder)
     return folder_name
+
+def make_dir(dirname):
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
 
 # Parse arguments
 opt = parser.parse_args()
@@ -77,29 +87,51 @@ else:
     bn = True
 
 # Results save path
-root = opt.dataset + '_' + opt.save_root + '/'
+root = opt.dataset + '_model_' + opt.save_root + '/' # dataset_NAME + _model_ + EXPERIMENT + / --> [dataset_NAME_model_EXPERIMENT/]
 model = get_folder_name(opt.dataset) + '_'
-if not os.path.isdir(root):
-    os.makedirs(root)
-if not os.path.isdir(root + 'epoch_validation'):
-    os.makedirs(root + 'epoch_validation')
-if not os.path.isdir(root + 'models'):
-    os.makedirs(root + 'models')
-print("Dataset: " + root)
-print("Model: " + model)
+make_dir(root)
+make_dir(root + 'validation_results')
+make_dir(root + 'training_histograms')
+make_dir(root + 'model_weights')
+make_dir(root + 'test_results')
+
+# Make folders if they do not exist
+#if not os.path.isdir(root):
+#    os.makedirs(root)
+#if not os.path.isdir(root + 'epoch_validation'):
+#    os.makedirs(root + 'epoch_validation')
+#if not os.path.isdir(root + 'model'):
+#    os.makedirs(root + 'models')
+#if not os.path.isdir(root + 'model'):
+#    os.makedirs(root + 'models')
+    
+print("Dataset: " + opt.dataset)
+print("Experiment: " + opt.save_root)
 print("\n")
 
 # Open file to write into output
 file_output = open(root + 'output.txt','w+')
 sys.stdout = file_output
 
-# Data Loader
-transform = transforms.Compose([
+# Transformations
+if opt.use_augmentations:
+    transform = transforms.Compose([
+        transforms.RandomVerticalFlip(),
+        transforms.RandomHorizontalFlip(),
+        transforms.GaussianBlur(9),
         transforms.ToTensor(),
-        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))       
-])
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    ])
+else:
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    ])
+
+# Data Loader
 train_loader = util.data_load(opt.dataset, opt.train_subfolder, transform, opt.batch_size, shuffle=True, num_workers=opt.num_workers)
 val_loader = util.data_load(opt.dataset, opt.val_subfolder, transform, opt.val_batch_size, shuffle=True)
+
 val = val_loader.__iter__().__next__()[0]
 img_size = val.size()[2]
 fixed_x_ = val[:num_show, :, :, 0:img_size] # [num_show, 3, 256, 256]
@@ -136,9 +168,18 @@ D.cuda()
 G.train()
 D.train()
 
-# Define BCE and L1 losses
+# Define BCE, L1 and SSIM losses
 BCE_loss = nn.BCELoss().cuda()
 L1_loss = nn.L1Loss().cuda()
+L2_loss = nn.MSELoss().cuda()
+
+def SSIM_loss(img_1, img_2):
+    img_1 = img_1.detach().cpu().numpy() # [bn, 1, 256, 256]
+    img_1 = np.squeeze(img_1)
+    img_2 = img_2.detach().cpu().numpy() # [bn, 1, 256, 256]
+    img_2 = np.squeeze(img_2)
+    SSIM = structural_similarity(img_1, img_2, channel_axis=0, gaussian_weights=True, sigma=1.5, use_sample_covariance=False, data_range=img_2.max())
+    return SSIM
 
 # Define Adam optimizer
 G_optimizer = optim.Adam(G.parameters(), lr=opt.lrG, betas=(opt.beta1, opt.beta2))
@@ -153,7 +194,7 @@ def lambda_rule(epoch):
 G_optim_scheduler = optim.lr_scheduler.LambdaLR(G_optimizer, lr_lambda=lambda_rule)
 D_optim_scheduler = optim.lr_scheduler.LambdaLR(D_optimizer, lr_lambda=lambda_rule)
 
-
+# Training histograms
 train_hist = {}
 train_hist_epoch = {}
 train_hist['G_losses'] = []
@@ -213,7 +254,7 @@ for epoch in range(opt.train_epoch):
         y_2 = torch.unsqueeze(y_2, 1)  # [bn, 1, 256, 256]
         y_3 = torch.unsqueeze(y_3, 1)  # [bn, 1, 256, 256]
         y_4 = torch.unsqueeze(y_4, 1)  # [bn, 1, 256, 256]
-      
+    
         # Concatenating labels
         y_ = torch.cat((y_1, y_2, y_3, y_4), dim=3) # [bn, 1, 256, 1024]
         
@@ -248,9 +289,6 @@ for epoch in range(opt.train_epoch):
         D_result_2 = D_result_fake[:, 1, :, :]
         D_result_3 = D_result_fake[:, 2, :, :]
         D_result_4 = D_result_fake[:, 3, :, :]
-        
-        
-		
 		
         D_fake_loss_1 = BCE_loss(D_result_1, Variable(torch.zeros(D_result_1.size()).cuda()))
         D_fake_loss_2 = BCE_loss(D_result_2, Variable(torch.zeros(D_result_2.size()).cuda()))
@@ -297,10 +335,24 @@ for epoch in range(opt.train_epoch):
         y_4 = y_[:, :, :, 768:1024]
 
         # Adversarial loss against real only + L1 (MAE) loss btwn fake and real imgs
-        G_train_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_1, y_1)
-        G_train_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_2, y_2)
-        G_train_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_3, y_3)
-        G_train_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_4, y_4)
+        G_train_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda()))
+        G_train_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda()))
+        G_train_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda()))
+        G_train_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda()))
+        
+        if 'L1' in opt.gen_mode:
+            G_train_loss_1 += opt.gen_lambda * L1_loss(G_result_1,y_1)
+            G_train_loss_2 += opt.gen_lambda * L1_loss(G_result_2,y_2)
+            G_train_loss_3 += opt.gen_lambda * L1_loss(G_result_3,y_3)
+            G_train_loss_4 += opt.gen_lambda * L1_loss(G_result_4,y_4)
+        elif 'ssim' in opt.gen_mode:
+            G_train_loss_1 += opt.gen_lambda * (1 - SSIM_loss(G_result_1,y_1))
+            G_train_loss_2 += opt.gen_lambda * (1 - SSIM_loss(G_result_2,y_2))
+            G_train_loss_3 += opt.gen_lambda * (1 - SSIM_loss(G_result_3,y_3))
+            G_train_loss_4 += opt.gen_lambda * (1 - SSIM_loss(G_result_4,y_4))
+        else:
+            print('This generator loss mode is not supported')
+            quit()
         
         # Averages all perfusion map losses
         G_train_loss = (G_train_loss_1 + G_train_loss_2 + G_train_loss_3 + G_train_loss_4) * 0.25
@@ -316,13 +368,13 @@ for epoch in range(opt.train_epoch):
         if opt.use_multimodal_loss:
             cbv_pred = (G_result_1+1) * (G_result_3+1) / 2 # +1 to avoid zero division
             if 'L1' in opt.mml_mode:
-                multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mml_lambda3
+                multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mml_lambda
             elif 'ssim' in opt.mml_mode: #fix
-                ssim_val = structural_similarity(cbv_pred,y_4)
-                multimodal_loss = (1 - ssim_val) * opt.mml_lambda3 
+                ssim_val = SSIM_loss(cbv_pred,y_4)
+                multimodal_loss = (1 - ssim_val) * opt.mml_lambda
             elif 'correlation' in opt.mml_mode: #fix
                 corr_val = util.corr2(cbv_pred, y_4)
-                multimodal_loss = (1 - corr_val) * opt.mml_lambda3
+                multimodal_loss = (1 - corr_val) * opt.mml_lambda
             else:
                 print('This multimodal loss mode is not supported')
                 quit()
@@ -368,10 +420,10 @@ for epoch in range(opt.train_epoch):
             #y_img_4[y_img_4==0]=np.nan
           
             # Cal
-            G_extrema_loss_1 = opt.extrema_lambda2 * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
-            G_extrema_loss_2 = opt.extrema_lambda2 * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
-            G_extrema_loss_3 = opt.extrema_lambda2 * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
-            G_extrema_loss_4 = opt.extrema_lambda2 * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
+            G_extrema_loss_1 = opt.ext_lambda * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
+            G_extrema_loss_2 = opt.ext_lambda * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
+            G_extrema_loss_3 = opt.ext_lambda * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
+            G_extrema_loss_4 = opt.ext_lambda * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
                     
             # Averages all extrema losses
             G_extrema_loss = (G_extrema_loss_1 + G_extrema_loss_2 + G_extrema_loss_3 + G_extrema_loss_4) * 0.25
@@ -447,7 +499,7 @@ for epoch in range(opt.train_epoch):
     ###################
     
     # Per epoch validation outputs
-    fixed_p = root + 'epoch_validation/' + model + str(epoch + 1) + '.png'
+    fixed_p = root + 'validation_results/' + model + str(epoch + 1) + '.png'
     print("fixed_p: "+fixed_p)
     
     # Store loss values at the end of each epoch
@@ -522,26 +574,40 @@ for epoch in range(opt.train_epoch):
             y_3 = y_val[:, :, :, 512:768]
             y_4 = y_val[:, :, :, 768:1024]
 
-            G_val_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_1, y_1)
-            G_val_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_2, y_2)
-            G_val_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_3, y_3)
-            G_val_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda())) + opt.L1_lambda1 * L1_loss(G_result_4, y_4)
+            G_val_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda()))
+            G_val_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda()))
+            G_val_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda()))
+            G_val_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda()))
 
+            if 'L1' in opt.gen_mode:
+                G_val_loss_1 += opt.gen_lambda * L1_loss(G_result_1, y_1)
+                G_val_loss_2 += opt.gen_lambda * L1_loss(G_result_2, y_2)
+                G_val_loss_3 += opt.gen_lambda * L1_loss(G_result_3, y_3)
+                G_val_loss_4 += opt.gen_lambda * L1_loss(G_result_4, y_4)
+            elif 'ssim' in opt.gen_mode:
+                G_val_loss_1 += opt.gen_lambda * (1 - SSIM_loss(G_result_1, y_1))
+                G_val_loss_2 += opt.gen_lambda * (1 - SSIM_loss(G_result_2, y_2))
+                G_val_loss_3 += opt.gen_lambda * (1 - SSIM_loss(G_result_3, y_3))
+                G_val_loss_4 += opt.gen_lambda * (1 - SSIM_loss(G_result_4, y_4))
+            else:
+                print('This generator loss mode is not supported')
+                quit()
+            
             G_val_loss = (G_val_loss_1 + G_val_loss_2 + G_val_loss_3 + G_val_loss_4) * 0.25
-
+            
             #######################
             # (6.1) Multimodal Loss
             #######################
             if opt.use_multimodal_loss:
                 cbv_pred = ((G_result_1+1) * (G_result_3+1)) / 2
                 if 'L1' in opt.mml_mode:
-                    multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mml_lambda3
+                    multimodal_loss = L1_loss(cbv_pred, (y_4+1)/2) * opt.mml_lambda
                 elif 'ssim' in opt.mml_mode: #fix
-                    ssim_val = compare_ssim(cbv_pred,y_4)
-                    multimodal_loss = (1 - ssim_val) * opt.mml_lambda3
+                    ssim_val = SSIM_loss(cbv_pred,y_4)
+                    multimodal_loss = (1 - ssim_val) * opt.mml_lambda
                 elif 'correlation' in opt.mml_mode: #fix
                     corr_val = util.corr2(cbv_pred, y_4)
-                    multimodal_loss = (1 - corr_val) * opt.mml_lambda3 
+                    multimodal_loss = (1 - corr_val) * opt.mml_lambda
                 else:
                     print('This multimodal loss mode is not supported')
                     quit()
@@ -575,10 +641,10 @@ for epoch in range(opt.train_epoch):
                 y_img_4 = cv2.normalize(y_4_copy.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
                 #y_img_4[y_img_4==0]=np.nan
 
-                G_extrema_loss_1 = opt.extrema_lambda2 * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
-                G_extrema_loss_2 = opt.extrema_lambda2 * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
-                G_extrema_loss_3 = opt.extrema_lambda2 * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
-                G_extrema_loss_4 = opt.extrema_lambda2 * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
+                G_extrema_loss_1 = opt.ext_lambda * np.nanmean(((y_img_1 - 0.5)**2 * (G_img_1-y_img_1)**2))
+                G_extrema_loss_2 = opt.ext_lambda * np.nanmean(((y_img_2 - 0.5)**2 * (G_img_2-y_img_2)**2))
+                G_extrema_loss_3 = opt.ext_lambda * np.nanmean(((y_img_3 - 0.5)**2 * (G_img_3-y_img_3)**2))
+                G_extrema_loss_4 = opt.ext_lambda * np.nanmean(((y_img_4 - 0.5)**2 * (G_img_4-y_img_4)**2))
                 G_extrema_loss = (G_extrema_loss_1 + G_extrema_loss_2 + G_extrema_loss_3 + G_extrema_loss_4) * 0.25
 
                 G_val_loss = G_val_loss + G_extrema_loss
@@ -608,13 +674,13 @@ for epoch in range(opt.train_epoch):
     if opt.use_checkpoint:
         if ((epoch+1) % opt.save_freq == 0) and ((epoch+1) != opt.train_epoch):
             print('saving model for checkpoint')
-            torch.save(G.state_dict(), root + 'models/' + model + 'generator_param_epoch' + str(epoch+1) + '.pkl')
+            torch.save(G.state_dict(), root + 'model_weights/' + 'generator_param_epoch' + str(epoch+1) + '.pkl')
         
         if ((epoch+1) % opt.save_fig_freq == 0) and ((epoch+1) != opt.train_epoch):  
-            with open(root + 'models/' + model + 'train_hist_epoch' + str(epoch+1) + '.pkl', 'wb') as f:
+            with open(root + 'training_histograms/' + 'train_hist_epoch' + str(epoch+1) + '.pkl', 'wb') as f:
                 pickle.dump(train_hist_epoch, f)
     
-        util.show_train_hist_epoch(train_hist_epoch, save=True, path=root + 'models/' + model + 'train_hist_epoch' + str(epoch+1) + '.png')
+        util.show_train_hist_epoch(train_hist_epoch, save=True, path=root + 'training_histograms/' + 'train_hist_epoch' + str(epoch+1) + '.png')
     
     # Update learning rates
     G_optim_scheduler.step()
@@ -633,19 +699,19 @@ file_output.close()
 epoch_progress.close()
 
 # Save generator and discriminator weights
-torch.save(G.state_dict(), root + 'models/' + model + 'generator_param_final.pkl')
-torch.save(D.state_dict(), root + 'models/' + model + 'discriminator_param.pkl')
+torch.save(G.state_dict(), root + 'model_weights/' + 'generator_param_final.pkl')
+torch.save(D.state_dict(), root + 'model_weights/' + 'discriminator_param.pkl')
 
 # Save training history
-with open(root + 'models/' + model + 'train_hist.pkl', 'wb') as f:
+with open(root + 'training_histograms/' + 'train_hist.pkl', 'wb') as f:
     pickle.dump(train_hist, f)
 
 # Visualize training history
-util.show_train_hist(train_hist, save=True, path=root + 'models/' + model + 'train_hist.png')
+util.show_train_hist(train_hist, save=True, path=root + 'training_histograms/' + 'train_hist.png')
 
 # Save epoch-wise training history
-with open(root + 'models/' + model + 'train_hist_epoch_final.pkl', 'wb') as f:
+with open(root + 'training_histograms/' + 'train_hist_epoch_final.pkl', 'wb') as f:
     pickle.dump(train_hist_epoch, f)
 
 # Visualize epoch-wise training history
-util.show_train_hist_epoch(train_hist_epoch, save=True, path=root + 'models/' + model + 'train_hist_epoch_final.png')
+util.show_train_hist_epoch(train_hist_epoch, save=True, path=root + 'training_histograms/' + 'train_hist_epoch_final.png')
