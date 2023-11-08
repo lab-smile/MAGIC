@@ -62,7 +62,7 @@ fprintf("Starting...partitionData.m\n")
 fprintf("------------------------------------------------------------------\n")
 
 % Set RNG to default
-rng('default')
+rng(1)
 
 %% Setup
 % Setup expected subfolders for NCCT and perfusion modalities

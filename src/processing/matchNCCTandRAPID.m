@@ -1,42 +1,30 @@
-% function [] = matchNCCTandRAPID(deidPath,partitionPath)
+function [] = matchNcctAndRapid(deidPath,partitionPath)
 %% Match NCCT and CTP Perfusion Map Slices
-% This is the main function for matching NCCT and RAPID perfusion map slices.
-% This function requires that the dataset contain NCCT and perfusion map
+% This is the main function for matching NCCT and CTP perfusion map slices.
+% This function requires that the dataset contain NCCT and Perfusion Map
 % data. The steps performed in this function include:
 %
-%   - Load all NCCT and perfusion map slices
-%   - List all z-locations (ex.-539) from all slices
-%   - Match closest slices between NCCT and perfusion map using 2mm threshold.
-%   - Create pseudo-RGB NCCT combining two offset(+/-4mm) slices
+%   - Aggregate all NCCT and Perfusion Map slices
+%   - List out all z-locations from slices
 % 
-% Expect NCCT to have 1.0mm resolution (SliceThickness) with 160 slices.
-% Each .dcm file contains a 512x512 slice with z-location
-% (ImagePositionPatient). Slices are saved as 256x256x3 uint8.
-% 
-% Expect CTP perfusion maps to be from RAPID with 10.0mm resolution with 64
-% slices. Each .dcm file contains a 286x256x3 uint8 slice with z-location.
-% Slices are saved as greyscale 256x256 uint8.
-% 
-% CTP maps are matched within 2mm (match_threshold) of NCCT slice. 
+% NCCT expected at 1.0mm resolution with 160 slices. Z coordinates are
+% taken from NCCT and each CTP slice. CTP slices are matched within 2mm of
+% NCCT z slice. Two slices offset from main NCCT slice are also taken and
+% stacked together.
 % 
 %   Garrett Fullerton 10/18/2020
 %   Smart Medical Informatics Learning and Evaluation (SMILE) Laboratory
 %   Biomedical Engineering
 % 
 %   Input:
-%       deidPath       - Path to source folder containing deid subjects.
-%       partitionPath  - Path to output folder to store partitioned data.
+%       deidPath     - Path to source folder containing deid subjects.
+%       outputPath   - Path to output folder to store partitioned data.
 % 
 %----------------------------------------
-% Last Updated: 10/17/2023 by KS
+% Last Updated: 8/22/2023 by KS
 % Create v4.
 % add gui and update selection methods
 %
-% 10/17/2023 by KS
-% - Renamed testing variables to reflect new argument names.
-% - Updated description to include expected data format.
-% - Renamed from `matchNcctAndRapid.m` to match the new matching script.
-% 
 % 8/22/2023 by KS
 % - Resolved an issue where the index for NCCT slice is exceeded.
 % - Resolved an issue where the index for NCCT slice is undercut.
@@ -59,18 +47,34 @@
 % 11/1/2020 by GF
 % - Create v4
 % - Added gui and update selection methods
+% 
+% 
+% ## Outline ##
+% Index all of the NCCT slices
+% Prepare a list of all z-locations of slices
+% Get list of all perfusion map files
+% Iterate across each slice
+%   - Find the closest NCCT slice based on z-locations
+%   - Find matching slices from perfusion maps
+%   - Name everything and save all
 
 %% Adjustable Variables
 %#########################################
-clc; clear; close all; warning off;
-% Input folder - folders must follow the order
-% > Subject -> Study -> Session -> Image
-deidPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_deid';
-% Output folder - will be created
-partitionPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_partition';
+% clc; clear; close all; warning off;
+% % Input folder - folders must follow the order
+% % > Subject -> Study -> Session -> Image
+% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test';
+% % Output folder - will be created
+% outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_output';
 %#########################################
 
-%% Initialization
+fprintf("Starting...matchNcctAndRapid.m\n")
+fprintf("------------------------------------------------------------------\n")
+
+% Fix any issues with study or series folders
+fix_study(deidPath)
+fix_series(deidPath)
+
 % Add utilities
 % - rgb2values.m
 % - convert_dicom_to_uint8.m
@@ -80,15 +84,7 @@ partitionPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MA
 % - parsave.m
 % - pct_brainMask_noEyes.m
 % - rapid_modalities.mat
-% - identify_rapid_modalities.m
 addpath('../toolbox/utilities')
-
-fprintf("Starting...matchNCCTandRAPID.m\n")
-fprintf("------------------------------------------------------------------\n")
-
-% Fix any issues with study or series folders
-fix_study(deidPath)
-fix_series(deidPath)
 
 % What is this? It is 3-columns with values in them.
 % This is a colormap
@@ -133,6 +129,9 @@ if ~exist(MTTPath,'dir'), mkdir(MTTPath); end
 %if ~exist(DelayPath,'dir'), mkdir(DelayPath); end
 if ~exist(NCCTsavePath,'dir'), mkdir(NCCTsavePath); end
 
+%skipped_subjects = struct;
+skip_idx = 1;
+
 % Checkpoint files to skip subjects.
 flagPath = fullfile(deidPath,'completed');
 if ~exist(flagPath,'dir'), mkdir(flagPath); end
@@ -142,7 +141,7 @@ subjects(end) = [];
 
 %% Get all file paths in one place
 % Loop through all subjects in input folder (skips hidden)
-for j = startNum+2:length(subjects)
+parfor j = startNum+2:length(subjects)
     
     % Grab subject name
     subject = subjects(j);
@@ -399,7 +398,7 @@ for j = startNum+2:length(subjects)
         NCCT_img = cat(3, NCCT_img_1, NCCT_img_2, NCCT_img_3);
         
         % Create save name using subject ID + slice number
-        saveName = strcat( extractBefore(subject_name,'_'),'_',num2str(slice_num),'.png');
+        saveName = strcat(subject_name,'_',num2str(slice_num),'.png');
         
         % Apply NCCT mask
         MTT_img_fin = apply_ncct_mask(MTT_img,mask_fin);
@@ -435,10 +434,10 @@ for j = startNum+2:length(subjects)
     fprintf('> Finished with subject %s\n',subject_name);
 end
 fprintf("------------------------------------------------------------------\n")
-fprintf("Finished...matchNCCTandRAPID.m\n")
+fprintf("Finished...matchNcctAndRapid.m\n")
 fprintf("------------------------------------------------------------------\n")
 
-% end
+end
 
 %% Local Functions
 function FINAL_img = getCorrectImage(MODALITY_zcoords,TEST_IMG)

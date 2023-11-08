@@ -5,7 +5,7 @@
 % scripts are from https://github.com/lab-smile/DICOM-Deidentification.
 % Listed below are the main functions used.
 %
-% matchNcctAndRapid.m - Finds matches between z-coords of NCCT and CTP
+% matchNCCTAndRAPID.m - Finds matches between z-coords of NCCT and CTP
 %   perfusion maps. Uses NCCT as base. By default, uses a 2mm threshold for
 %   CTP matching and 4mm offset for NCCT stacking to create pseudo RGB
 %   image. Saves results based on modality (NCCT, TTP, MTT, CBV, CBF).
@@ -36,14 +36,14 @@
 %% Adjustable Variables
 %#########################################
 clc; clear; close all; warning off;
-deid_path = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\deid';
-partition_path = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\partition_test';
-dataset_path = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_real_test';
+deid_path = '/red/ruogu.fang/kylebsee/RAPID_completePairs';
+partition_path = '/blue/ruogu.fang/kylebsee/MAGIC/data/partition_A2';
+dataset_path = '/blue/ruogu.fang/kylebsee/MAGIC/data/dataset_A2';
 test_ratio = 0.2;
 %#########################################
 addpath('../toolbox/utilities')
 
 matchNCCTandRAPID(deid_path,partition_path)
-% partitionData(partition_path,test_ratio)
-% concatenateMaps(partition_path,dataset_path)
+partitionData(partition_path,test_ratio)
+concatenateMaps(partition_path,dataset_path)
 % end

@@ -36,7 +36,8 @@ parser.add_argument('--lrG', type=float, default=0.0002, help='learning rate, de
 parser.add_argument('--gen_lambda', type=float, default=100, help='scaling factor for generator loss')
 parser.add_argument('--ext_lambda', type=float, default=100, help='scaling factor for extrema loss')
 parser.add_argument('--mml_lambda', type=float, default=100, help='scaling factor for multimodal loss')
-parser.add_argument('--gen_mode',default='L1',help='[ L1 | ssim ] loss used for generator loss')
+parser.add_argument('--dsc_mode',default='bce',help='[ bce | wasserstein ] loss used for discriminator')
+parser.add_argument('--gen_mode',default='L1',help='[ L1 | ssim ] loss used for generator')
 parser.add_argument('--mml_mode',default='L1',help='[ L1 | ssim | correlation ] loss used for multimodal loss')
 parser.add_argument('--use_extrema_loss',default=True)
 parser.add_argument('--use_multimodal_loss',default=True) # fix for ssim and corr, l1 is fine
@@ -94,16 +95,6 @@ make_dir(root + 'validation_results')
 make_dir(root + 'training_histograms')
 make_dir(root + 'model_weights')
 make_dir(root + 'test_results')
-
-# Make folders if they do not exist
-#if not os.path.isdir(root):
-#    os.makedirs(root)
-#if not os.path.isdir(root + 'epoch_validation'):
-#    os.makedirs(root + 'epoch_validation')
-#if not os.path.isdir(root + 'model'):
-#    os.makedirs(root + 'models')
-#if not os.path.isdir(root + 'model'):
-#    os.makedirs(root + 'models')
     
 print("Dataset: " + opt.dataset)
 print("Experiment: " + opt.save_root)
@@ -168,18 +159,28 @@ D.cuda()
 G.train()
 D.train()
 
-# Define BCE, L1 and SSIM losses
+# Define BCE, L1, L2 (MSE) and SSIM losses
 BCE_loss = nn.BCELoss().cuda()
 L1_loss = nn.L1Loss().cuda()
 L2_loss = nn.MSELoss().cuda()
 
 def SSIM_loss(img_1, img_2):
+    # Fake, Real
     img_1 = img_1.detach().cpu().numpy() # [bn, 1, 256, 256]
     img_1 = np.squeeze(img_1)
     img_2 = img_2.detach().cpu().numpy() # [bn, 1, 256, 256]
     img_2 = np.squeeze(img_2)
     SSIM = structural_similarity(img_1, img_2, channel_axis=0, gaussian_weights=True, sigma=1.5, use_sample_covariance=False, data_range=img_2.max())
     return SSIM
+
+# To use as discriminator loss
+def Wasserstein_loss(img_1, img_2):
+    # Fake, Real
+    img_1 = img_1.cpu() # [bn, 1, 256, 256]
+    img_1 = np.squeeze(img_1)
+    img_2 = img_2.cpu() # [bn, 1, 256, 256]
+    img_2 = np.squeeze(img_2)
+    return torch.mean(img_2) - torch.mean(img_1) # Real - Fake
 
 # Define Adam optimizer
 G_optimizer = optim.Adam(G.parameters(), lr=opt.lrG, betas=(opt.beta1, opt.beta2))
@@ -206,6 +207,13 @@ train_hist_epoch['Extrema_loss_epoch'] = []
 train_hist_epoch['Multimodal_loss_epoch'] = []
 train_hist_epoch['Overall_G_loss'] = []
 
+# Print out values for record in output.txt
+print("Parsed Arguments:")
+for arg, value in vars(opt).items():
+    print(f"{arg}: {value}")
+print("\n")
+
+# Record start and stop time
 print('Starting training!')
 start_time = time.time()
 
@@ -269,40 +277,57 @@ for epoch in range(opt.train_epoch):
         # Initializes gradients of discriminator
         D.zero_grad()
         
-        # Pass input and labels through discriminator
-        D_result_real = D(x_, y_)   # D(input, label), D([1, 3, 256, 256], [1, 1, 256, 1024])    
+        # Use discriminator on REAL data
+        D_result_real = D(x_, y_)   # D(input, label), D([1, 3, 256, 256], [1, 1, 256, 1024])
         
-        D_result_1 = D_result_real[:, 0, :, :] # [1, 30, 30]
-        D_result_2 = D_result_real[:, 1, :, :]
-        D_result_3 = D_result_real[:, 2, :, :]
-        D_result_4 = D_result_real[:, 3, :, :]
-                
-        D_real_loss_1 = BCE_loss(D_result_1, Variable(torch.ones(D_result_1.size()).cuda()))
-        D_real_loss_2 = BCE_loss(D_result_2, Variable(torch.ones(D_result_2.size()).cuda()))
-        D_real_loss_3 = BCE_loss(D_result_3, Variable(torch.ones(D_result_3.size()).cuda()))
-        D_real_loss_4 = BCE_loss(D_result_4, Variable(torch.ones(D_result_4.size()).cuda()))
-        
+        # Use discriminator on FAKE data
         G_result = G(x_) # [bn, 1, 256, 1024]
         D_result_fake = D(x_, G_result)
-
-        D_result_1 = D_result_fake[:, 0, :, :] # [1, 30, 30]
-        D_result_2 = D_result_fake[:, 1, :, :]
-        D_result_3 = D_result_fake[:, 2, :, :]
-        D_result_4 = D_result_fake[:, 3, :, :]
-		
-        D_fake_loss_1 = BCE_loss(D_result_1, Variable(torch.zeros(D_result_1.size()).cuda()))
-        D_fake_loss_2 = BCE_loss(D_result_2, Variable(torch.zeros(D_result_2.size()).cuda()))
-        D_fake_loss_3 = BCE_loss(D_result_3, Variable(torch.zeros(D_result_3.size()).cuda()))
-        D_fake_loss_4 = BCE_loss(D_result_4, Variable(torch.zeros(D_result_4.size()).cuda()))
-
-        # Averages discriminator loss (real+fake)
-        D_train_loss_1 = (D_real_loss_1 + D_fake_loss_1) * 0.5
-        D_train_loss_2 = (D_real_loss_2 + D_fake_loss_2) * 0.5
-        D_train_loss_3 = (D_real_loss_3 + D_fake_loss_3) * 0.5
-        D_train_loss_4 = (D_real_loss_4 + D_fake_loss_4) * 0.5
         
-        # Averages all perfusion map losses and backprop loss
-        D_train_loss = (D_train_loss_1 + D_train_loss_2 + D_train_loss_3 + D_train_loss_4) * 0.25
+        # Grab maps from real data
+        D_result_r1 = D_result_real[:, 0, :, :] # [1, 30, 30]
+        D_result_r2 = D_result_real[:, 1, :, :]
+        D_result_r3 = D_result_real[:, 2, :, :]
+        D_result_r4 = D_result_real[:, 3, :, :]
+            
+        # Grab maps from fake data
+        D_result_f1 = D_result_fake[:, 0, :, :] # [1, 30, 30]
+        D_result_f2 = D_result_fake[:, 1, :, :]
+        D_result_f3 = D_result_fake[:, 2, :, :]
+        D_result_f4 = D_result_fake[:, 3, :, :]
+        
+        if 'bce' in opt.dsc_mode:
+            # Real loss
+            D_real_loss_1 = BCE_loss(D_result_r1, Variable(torch.ones(D_result_r1.size()).cuda()))
+            D_real_loss_2 = BCE_loss(D_result_r2, Variable(torch.ones(D_result_r2.size()).cuda()))
+            D_real_loss_3 = BCE_loss(D_result_r3, Variable(torch.ones(D_result_r3.size()).cuda()))
+            D_real_loss_4 = BCE_loss(D_result_r4, Variable(torch.ones(D_result_r4.size()).cuda()))
+            # Fake loss
+            D_fake_loss_1 = BCE_loss(D_result_f1, Variable(torch.zeros(D_result_f1.size()).cuda()))
+            D_fake_loss_2 = BCE_loss(D_result_f2, Variable(torch.zeros(D_result_f2.size()).cuda()))
+            D_fake_loss_3 = BCE_loss(D_result_f3, Variable(torch.zeros(D_result_f3.size()).cuda()))
+            D_fake_loss_4 = BCE_loss(D_result_f4, Variable(torch.zeros(D_result_f4.size()).cuda()))
+            #------------------------------------------------
+            # Averages discriminator loss (real+fake)
+            D_train_loss_1 = (D_real_loss_1 + D_fake_loss_1) * 0.5
+            D_train_loss_2 = (D_real_loss_2 + D_fake_loss_2) * 0.5
+            D_train_loss_3 = (D_real_loss_3 + D_fake_loss_3) * 0.5
+            D_train_loss_4 = (D_real_loss_4 + D_fake_loss_4) * 0.5
+            # Averages all perfusion map losses
+            D_train_loss = (D_train_loss_1 + D_train_loss_2 + D_train_loss_3 + D_train_loss_4) * 0.25
+        elif 'wasserstein' in opt.dsc_mode:
+            # Take Wasserstein loss
+            D_train_loss_1 = Wasserstein_loss(D_result_f1, D_result_r1)
+            D_train_loss_2 = Wasserstein_loss(D_result_f2, D_result_r2)
+            D_train_loss_3 = Wasserstein_loss(D_result_f3, D_result_r3)
+            D_train_loss_4 = Wasserstein_loss(D_result_f4, D_result_r4)
+            # Averages all perfusion map losses
+            D_train_loss = (D_train_loss_1 + D_train_loss_2 + D_train_loss_3 + D_train_loss_4) * 0.25
+        else:
+            print('This generator loss mode is not supported')
+            quit()
+        
+        # Backpropogate discriminator loss
         D_train_loss.backward(retain_graph=True)
         D_optimizer.step()
         
@@ -346,7 +371,7 @@ for epoch in range(opt.train_epoch):
             G_train_loss_3 += opt.gen_lambda * L1_loss(G_result_3,y_3)
             G_train_loss_4 += opt.gen_lambda * L1_loss(G_result_4,y_4)
         elif 'ssim' in opt.gen_mode:
-            G_train_loss_1 += opt.gen_lambda * (1 - SSIM_loss(G_result_1,y_1))
+            G_train_loss_1 += opt.gen_lambda * (1 - SSIM_loss(G_result_1,y_1)) # Fake - Real
             G_train_loss_2 += opt.gen_lambda * (1 - SSIM_loss(G_result_2,y_2))
             G_train_loss_3 += opt.gen_lambda * (1 - SSIM_loss(G_result_3,y_3))
             G_train_loss_4 += opt.gen_lambda * (1 - SSIM_loss(G_result_4,y_4))
