@@ -93,8 +93,6 @@ for i = 1:length(subjects)
     % Grab subject name
     subject = subjects(i);
     subject_name = subject.name;
-    
-    % 
 
     % Skip file if necessary
     flagFile = fullfile(flagPath,[subject_name,'.txt']);
@@ -215,7 +213,11 @@ function processPerf(dataPath,partitionPath,subject_name,loc,jj,mask,type)
 
     % 
     map = niftiread(dataPath);
-    slice = imrotate(map(:,:,loc*2),270);
+    if size(map,3) == 320
+        slice = imrotate(map(:,:,loc),270);
+    else
+        slice = imrotate(map(:,:,loc*2),270);
+    end
     slice = uint8(normalize(slice,"range",[0 60]));
     slice = imadjust(slice);
     slice = imresize(slice,[256 256]); % Resize after making all changes
