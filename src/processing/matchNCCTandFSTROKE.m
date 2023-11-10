@@ -121,6 +121,7 @@ for i = 1:length(subjects)
     NCCT_idx = or(NCCT_idx,contains(series_names,'NON_CON','IgnoreCase',true));
     NCCT_idx = and(NCCT_idx,~contains(series_names,'bone','IgnoreCase',true));
     NCCT_idx = and(NCCT_idx,~contains(series_names,'5.0','IgnoreCase',true));
+    NCCT_idx = and(NCCT_idx,~contains(series_names,'soft_tissue','IgnoreCase',true));
 
     % Grab ALL files from the NCCT series
     NCCT_series = [];

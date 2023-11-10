@@ -18,6 +18,7 @@
 ### Fixed
 - `matchNCCTandRAPID.m` Resolved an issue where ID was read incorrectly. Could not handle new ID change. (12345601_1900 --> 123456)
 - `matchNCCTandFSTROKE.m` Resolved an issue where the expected NCCT is larger than 160 slices in a 1.0mm resolution folder. Fixed the issue in processPerf by if statement to handle 320 and 160 slices.
+- `matchNCCTandFSTROKE.m` Resolved an issue where soft tissue was picked up as NCCT. Now avoids 'Soft_Tissue' keyword.
 
 ## [0.1.4] - 2023-10-25
 ### Fixed
