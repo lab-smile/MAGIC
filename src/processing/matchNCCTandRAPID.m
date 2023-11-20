@@ -1,4 +1,4 @@
-function [] = matchNcctAndRapid(deidPath,partitionPath)
+% function [] = matchNcctAndRapid(deidPath,partitionPath)
 %% Match NCCT and CTP Perfusion Map Slices
 % This is the main function for matching NCCT and CTP perfusion map slices.
 % This function requires that the dataset contain NCCT and Perfusion Map
@@ -60,12 +60,12 @@ function [] = matchNcctAndRapid(deidPath,partitionPath)
 
 %% Adjustable Variables
 %#########################################
-% clc; clear; close all; warning off;
-% % Input folder - folders must follow the order
-% % > Subject -> Study -> Session -> Image
-% datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test';
-% % Output folder - will be created
-% outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_output';
+clc; clear; close all; warning off;
+% Input folder - folders must follow the order
+% > Subject -> Study -> Session -> Image
+datasetPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test';
+% Output folder - will be created
+outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_output';
 %#########################################
 
 fprintf("Starting...matchNcctAndRapid.m\n")
@@ -437,7 +437,7 @@ fprintf("------------------------------------------------------------------\n")
 fprintf("Finished...matchNcctAndRapid.m\n")
 fprintf("------------------------------------------------------------------\n")
 
-end
+% end
 
 %% Local Functions
 function FINAL_img = getCorrectImage(MODALITY_zcoords,TEST_IMG)

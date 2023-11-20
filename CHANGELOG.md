@@ -1,7 +1,12 @@
+## [0.1.6] - 2023-11-20
+### Changed
+- `matchNCCTandFSTROKE.m` Now matches using z-slices. Can handle multiple NCCT resolutions.
+
 ## [0.1.5] - 2023-11-07
 ### Added
-- `pytorch_pix2pix.py` Wasserstein loss for discriminator.
-- `pytorch_pix2pix.py` L2 loss (MSELoss).
+- `pytorch_pix2pix.py` Discriminator can now use wasserstein loss (default is bce).
+- `pytorch_pix2pix.py` Generator and multimodal loss can now use L2 (MSELoss).
+- `pytorch_pix2pix.py` Generator and multimodal loss can now use Huber and L0.5 loss (HuberLoss).
 - `pytorch_pix2pix.py` New argument for loss type in discriminator.
 
 ### Changed

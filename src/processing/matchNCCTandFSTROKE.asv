@@ -207,28 +207,10 @@ for i = 1:length(subjects)
         NCCT_info = dicominfo(NCCT_filepath);                      % Read NCCT dcm info
         coords = NCCT_info.ImagePositionPatient;
         z_coord = coords(3);
-        NCCT_zcoords(z_coord) = NCCT_filepath;
     end
     
+    for jj
     
-    for ii = 1:length(fieldnames(CTP_file.PerFrameFunctionalGroupsSequence))
-        fieldname = ['Item_', num2str(ii)];
-        coords = CTP_file.PerFrameFunctionalGroupsSequence.(fieldname).PlanePositionSequence.Item_1.ImagePositionPatient;
-        z_coord = coords(3);
-        CTP_zcoords(z_coord) = string(ii);
-    end
-    
-    % Convert the stored z-coordinates into a useable matrix
-    NCCT_zs = cell2mat(keys(NCCT_zcoords));
-    CTP_zs = cell2mat(keys(CTP_zcoords));
-    slice_num = 1;
-    
-    for jj = 4:length(NCCT_zcoords)-3
-        
-        % Grab a z-coord
-        NCCT_z = NCCT_zs(i);
-        
-        % Use the z-coord to find a match within 'match_threshold'.
     
     % Skip the first 4 and last 4 slices.
     first_slice_loc = NCCT_slice_offset+1;    
