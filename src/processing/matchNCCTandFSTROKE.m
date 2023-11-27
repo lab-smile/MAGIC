@@ -88,10 +88,11 @@ if ~exist(rCBFPath,'dir'), mkdir(rCBFPath); end
 if ~exist(MTTPath,'dir'), mkdir(MTTPath); end
 if ~exist(NCCTsavePath,'dir'), mkdir(NCCTsavePath); end
 
-NCCT_slice_offset = 4; % How many offset slices from main slice
-offset_range = NCCT_slice_offset*2+1; % Range for 1 NCCT slice
+NCCT_slice_offset = 4; % How many offset slices from main slice (mm)
+offset_range = NCCT_slice_offset*2+1; % Range for 1 NCCT slice (mm)
 dsize = 7; % Disk radius for morphological closing, used in Fang's PCT function (originally 7)
 ub = 200; % Upperbound, used in Fang's PCT function
+match_threshold = 2; % Maximum threshold for finding matching Perfusion map slice (mm)
 
 % Checkpoint files to skip subjects
 flagPath = fullfile(deidPath,'completed');
@@ -223,33 +224,44 @@ for i = 1:length(subjects)
     CTP_zs = cell2mat(keys(CTP_zcoords));
     slice_num = 1;
     
-    for jj = 4:length(NCCT_zcoords)-3
+    % Avoid first and last 3 NCCT slices. Also skip every 4 slices?
+    for jj = 4:offset_range:length(NCCT_zcoords)-3
         
         % Grab a z-coord
-        NCCT_z = NCCT_zs(i);
+        NCCT_z = NCCT_zs(jj);
         
         % Use the z-coord to find a match within 'match_threshold'.
-    
-    % Skip the first 4 and last 4 slices.
-    first_slice_loc = NCCT_slice_offset+1;    
-    last_slice_loc = first_slice_loc + offset_range * floor((length(NCCT_files)-first_slice_loc) / offset_range);
-    slices = linspace(first_slice_loc, last_slice_loc,(last_slice_loc-first_slice_loc)/offset_range+1);
-    slices = slices(5:end-4);
-    
-    % Loop through main slices given offset [-offset | main | +offset]
-    for jj = 1:length(slices)
-        ii = slices(jj);
-
-        % Process NCCT slice given img and info. Repeat with offset slices
-        NCCT_file = NCCT_files(ii);
-        NCCT_img = processNCCT(NCCT_file, ub, dsize);
+        % (If larger than slice threshold, don't match)
+        [closest_val,idx] = min(abs(CTP_zs-NCCT_z));
+        closest_val = closest_val(1);
+        if closest_val >= match_threshold, continue; end
+        CTP_z = CTP_zs(idx);
+        correspondingSlice = str2num(CTP_zcoords(CTP_z)); % Slice number (3rd dim) to get from CTP volume
         
-        NCCTplus_file = NCCT_files(ii+NCCT_slice_offset);
+        % (Don't match if offset slices are not found either)
+        NCCTplus_z = NCCT_zs(jj)+4;
+        [closest_plus,idplus] = min(abs(NCCT_zs-NCCTplus_z));
+        if closest_plus >= NCCT_slice_offset, continue; end
+        NCCTplus_z = NCCT_zs(idplus);
+        
+        NCCTminus_z = NCCT_zs(jj)-4;
+        [closest_minus,idminus] = min(abs(NCCT_zs-NCCTminus_z));
+        if closest_minus >= NCCT_slice_offset, continue; end
+        NCCTminus_z = NCCT_zs(idminus);
+
+        if idplus < 1 || idplus > length(NCCT_zs) || idminus < 1 || idminus > length(NCCT_zs), continue; end
+        
+        % Get images. NCCT use path. CTP use slice number
+        NCCT_file = NCCT_zcoords(NCCT_z);
+        NCCT_img = processNCCT(NCCT_file, ub, dsize);
+        if nnz(NCCT_img)/numel(NCCT_img) < 0.2, continue; end
+        
+        NCCTplus_file = NCCT_zcoords(NCCTplus_z);
         NCCTplus_img = processNCCT(NCCTplus_file, ub, dsize);
-
-        NCCTminus_file = NCCT_files(ii-NCCT_slice_offset);
+        
+        NCCTminus_file = NCCT_zcoords(NCCTminus_z);
         NCCTminus_img = processNCCT(NCCTminus_file, ub, dsize);
-
+        
         % Re-apply main mask to offset slices
         mask = NCCT_img ~= 0;
         NCCT_img(~mask)= 0;
@@ -258,7 +270,7 @@ for i = 1:length(subjects)
         
         % Concatenate all 3 slices together
         NCCT_img = cat(3, NCCTminus_img, NCCT_img, NCCTplus_img);
-
+        
         % Save NCCT image
         saveName = strcat(subject_name,'_',num2str(jj),'.png');
         savePath = fullfile(partitionPath,'NCCT',saveName);
@@ -267,18 +279,67 @@ for i = 1:length(subjects)
         % Convert perfusion map to specific ranges and save appropriately
         % -- CBF: 0-60, CBV: 0-4, MTT: 0-12, TTP: 0-25
         CBF_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
-        processPerf(CBF_path,partitionPath,subject_name,ii,jj,mask,'cbf')
+        processPerf(CBF_path,partitionPath,subject_name,correspondingSlice,jj,mask,'cbf')
 
         CBV_path = fullfile(fstrokePath,subject_name,'cbv.nii.gz');
-        processPerf(CBV_path,partitionPath,subject_name,ii,jj,mask,'cbv')
+        processPerf(CBV_path,partitionPath,subject_name,correspondingSlice,jj,mask,'cbv')
 
         MTT_path = fullfile(fstrokePath,subject_name,'mtt.nii.gz');
-        processPerf(MTT_path,partitionPath,subject_name,ii,jj,mask,'mtt')
+        processPerf(MTT_path,partitionPath,subject_name,correspondingSlice,jj,mask,'mtt')
 
         TTP_path = fullfile(fstrokePath,subject_name,'tmax.nii.gz');
-        processPerf(TTP_path,partitionPath,subject_name,ii,jj,mask,'ttp')
-        
+        processPerf(TTP_path,partitionPath,subject_name,correspondingSlice,jj,mask,'ttp')
     end
+    
+%     % Skip the first 4 and last 4 slices.
+%     first_slice_loc = NCCT_slice_offset+1;    
+%     last_slice_loc = first_slice_loc + offset_range * floor((length(NCCT_files)-first_slice_loc) / offset_range);
+%     slices = linspace(first_slice_loc, last_slice_loc,(last_slice_loc-first_slice_loc)/offset_range+1);
+%     slices = slices(5:end-4);
+%     
+%     % Loop through main slices given offset [-offset | main | +offset]
+%     for jj = 1:length(slices)
+%         ii = slices(jj);
+% 
+%         % Process NCCT slice given img and info. Repeat with offset slices
+%         NCCT_file = NCCT_files(ii);
+%         NCCT_img = processNCCT(NCCT_file, ub, dsize);
+%         
+%         NCCTplus_file = NCCT_files(ii+NCCT_slice_offset);
+%         NCCTplus_img = processNCCT(NCCTplus_file, ub, dsize);
+% 
+%         NCCTminus_file = NCCT_files(ii-NCCT_slice_offset);
+%         NCCTminus_img = processNCCT(NCCTminus_file, ub, dsize);
+% 
+%         % Re-apply main mask to offset slices
+%         mask = NCCT_img ~= 0;
+%         NCCT_img(~mask)= 0;
+%         NCCTplus_img(~mask)= 0;
+%         NCCTminus_img(~mask)= 0;
+%         
+%         % Concatenate all 3 slices together
+%         NCCT_img = cat(3, NCCTminus_img, NCCT_img, NCCTplus_img);
+% 
+%         % Save NCCT image
+%         saveName = strcat(subject_name,'_',num2str(jj),'.png');
+%         savePath = fullfile(partitionPath,'NCCT',saveName);
+%         imwrite(NCCT_img,savePath)
+%         
+%         % Convert perfusion map to specific ranges and save appropriately
+%         % -- CBF: 0-60, CBV: 0-4, MTT: 0-12, TTP: 0-25
+%         CBF_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
+%         processPerf(CBF_path,partitionPath,subject_name,ii,jj,mask,'cbf')
+% 
+%         CBV_path = fullfile(fstrokePath,subject_name,'cbv.nii.gz');
+%         processPerf(CBV_path,partitionPath,subject_name,ii,jj,mask,'cbv')
+% 
+%         MTT_path = fullfile(fstrokePath,subject_name,'mtt.nii.gz');
+%         processPerf(MTT_path,partitionPath,subject_name,ii,jj,mask,'mtt')
+% 
+%         TTP_path = fullfile(fstrokePath,subject_name,'tmax.nii.gz');
+%         processPerf(TTP_path,partitionPath,subject_name,ii,jj,mask,'ttp')
+%         
+%     end
     fileID = fopen(flagFile,'w');
     fclose(fileID);
     fprintf('> Finished with subject %s\n',subject_name);
@@ -298,11 +359,7 @@ function processPerf(dataPath,partitionPath,subject_name,loc,jj,mask,type)
 
     % 
     map = niftiread(dataPath);
-    if size(map,3) == 320
-        slice = imrotate(map(:,:,loc),270);
-    else
-        slice = imrotate(map(:,:,loc*2),270);
-    end
+    slice = imrotate(map(:,:,loc),270);
     slice = uint8(normalize(slice,"range",[0 60]));
     slice = imadjust(slice);
     slice = imresize(slice,[256 256]); % Resize after making all changes
@@ -332,9 +389,8 @@ end
 function img = processNCCT(file, ub, dsize)
     % -- Process NCCT using pct tools to mask twice --
     % Read dicom image and metadata
-    filepath = fullfile(file.folder, file.name);
-    img = dicomread(filepath);
-    info = dicominfo(filepath);
+    img = dicomread(file);
+    info = dicominfo(file);
     
     % Use metadata to resize and rescale img data
     img = convert_dicom_to_uint8(img,info);
