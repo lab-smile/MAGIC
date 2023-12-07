@@ -147,7 +147,7 @@ for i = 1:length(subjects)
 
     % Look for the NCCT series using keywords
     NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'};
-    NCCT_exclude = {'bone', '5.0', '0.5', 'soft_tissue'};
+    NCCT_exclude = {'bone', '5.0', '0.5', 'soft_tissue', 'Untitled', 'MIP', 'Stack', 'Summary', 'CTA', 'SUB', 'Dynamic', 'Perfusion', 'Lung', 'Sft', 'Soft'};
     NCCT_idx = false(size(series_names)); % Initialize to include everything
     for kk = 1:length(NCCT_include)
         NCCT_idx = or(NCCT_idx, contains(series_names, NCCT_include{kk}, 'IgnoreCase', true));
@@ -236,14 +236,16 @@ for i = 1:length(subjects)
         NCCT_zcoords(z_coord) = NCCT_filepath;
     end
     
-    
-    for ii = 1:length(fieldnames(CTP_file.PerFrameFunctionalGroupsSequence))
-        fieldname = ['Item_', num2str(ii)];
-        coords = CTP_file.PerFrameFunctionalGroupsSequence.(fieldname).PlanePositionSequence.Item_1.ImagePositionPatient;
-        z_coord = coords(3);
-        CTP_zcoords(z_coord) = string(ii);
+    try
+        for ii = 1:length(fieldnames(CTP_file.PerFrameFunctionalGroupsSequence))
+            fieldname = ['Item_', num2str(ii)];
+            coords = CTP_file.PerFrameFunctionalGroupsSequence.(fieldname).PlanePositionSequence.Item_1.ImagePositionPatient;
+            z_coord = coords(3);
+            CTP_zcoords(z_coord) = string(ii);
+        end
+    catch
+        continue;
     end
-    
     % Convert the stored z-coordinates into a useable matrix
     NCCT_zs = cell2mat(keys(NCCT_zcoords));
     CTP_zs = cell2mat(keys(CTP_zcoords));
