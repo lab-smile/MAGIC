@@ -134,28 +134,53 @@ for i = 1:length(subjects)
     NCCT_zcoords = containers.Map('KeyType','double','ValueType','char');
     CTP_zcoords = containers.Map('KeyType','double','ValueType','char');
     
-    % Look for the NCCT series using keywords
-    NCCT_idx = contains(series_names,'without','IgnoreCase',true);
-    NCCT_idx = or(NCCT_idx,contains(series_names,'W-O','IgnoreCase',true));
-    NCCT_idx = or(NCCT_idx,contains(series_names,'NCCT','IgnoreCase',true));
-    NCCT_idx = or(NCCT_idx,contains(series_names,'NON-CON','IgnoreCase',true));
-    NCCT_idx = or(NCCT_idx,contains(series_names,'NON_CON','IgnoreCase',true));
-    NCCT_idx = and(NCCT_idx,~contains(series_names,'bone','IgnoreCase',true));
-    NCCT_idx = and(NCCT_idx,~contains(series_names,'5.0','IgnoreCase',true));
-    NCCT_idx = and(NCCT_idx,~contains(series_names,'0.5','IgnoreCase',true));
-    NCCT_idx = and(NCCT_idx,~contains(series_names,'soft_tissue','IgnoreCase',true));
+%     % Look for the NCCT series using keywords
+%     NCCT_idx = contains(series_names,'without','IgnoreCase',true);
+%     NCCT_idx = or(NCCT_idx,contains(series_names,'W-O','IgnoreCase',true));
+%     NCCT_idx = or(NCCT_idx,contains(series_names,'NCCT','IgnoreCase',true));
+%     NCCT_idx = or(NCCT_idx,contains(series_names,'NON-CON','IgnoreCase',true));
+%     NCCT_idx = or(NCCT_idx,contains(series_names,'NON_CON','IgnoreCase',true));
+%     NCCT_idx = and(NCCT_idx,~contains(series_names,'bone','IgnoreCase',true));
+%     NCCT_idx = and(NCCT_idx,~contains(series_names,'5.0','IgnoreCase',true));
+%     NCCT_idx = and(NCCT_idx,~contains(series_names,'0.5','IgnoreCase',true));
+%     NCCT_idx = and(NCCT_idx,~contains(series_names,'soft_tissue','IgnoreCase',true));
 
-    % Look for CTP series using keywords
-    CTP_idx = contains(series_names,'0.5','IgnoreCase',true);
-    CTP_idx = or(CTP_idx,contains(series_names,'4D','IgnoreCase',true));
-    CTP_idx = or(CTP_idx,contains(series_names,'Perfusion','IgnoreCase',true));
-    CTP_idx = or(CTP_idx,contains(series_names,'Dynamic','IgnoreCase',true));
-    CTP_idx = or(CTP_idx,contains(series_names,'Head','IgnoreCase',true));
-    CTP_idx = and(CTP_idx,~contains(series_names,'CTA','IgnoreCase',true));
-    CTP_idx = and(CTP_idx,~contains(series_names,'Summary','IgnoreCase',true));
-    CTP_idx = and(CTP_idx,~contains(series_names,'Bone','IgnoreCase',true));
-    CTP_idx = and(CTP_idx,~contains(series_names,'MIP','IgnoreCase',true));
-    CTP_idx = and(CTP_idx,~contains(series_names,'1.0','IgnoreCase',true));
+    % Look for the NCCT series using keywords
+    NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'};
+    NCCT_exclude = {'bone', '5.0', '0.5', 'soft_tissue'};
+    NCCT_idx = true(size(series_names)); % Initialize to include everything
+    for kk = 1:length(NCCT_include)
+        NCCT_idx = or(NCCT_idx, contains(series_names, NCCT_include{kk}, 'IgnoreCase', true));
+    end
+    for kk = 1:length(NCCT_exclude)
+        NCCT_idx = and(NCCT_idx, ~contains(series_names, NCCT_exclude{kk}, 'IgnoreCase', true));
+    end
+    
+    
+%     % Look for CTP series using keywords
+%     CTP_idx = contains(series_names,'0.5','IgnoreCase',true);
+%     CTP_idx = or(CTP_idx,contains(series_names,'4D','IgnoreCase',true));
+%     CTP_idx = or(CTP_idx,contains(series_names,'Perfusion','IgnoreCase',true));
+%     CTP_idx = or(CTP_idx,contains(series_names,'Dynamic','IgnoreCase',true));
+%     CTP_idx = or(CTP_idx,contains(series_names,'Head','IgnoreCase',true));
+%     CTP_idx = and(CTP_idx,~contains(series_names,'CTA','IgnoreCase',true));
+%     CTP_idx = and(CTP_idx,~contains(series_names,'Summary','IgnoreCase',true));
+%     CTP_idx = and(CTP_idx,~contains(series_names,'Bone','IgnoreCase',true));
+%     CTP_idx = and(CTP_idx,~contains(series_names,'MIP','IgnoreCase',true));
+%     CTP_idx = and(CTP_idx,~contains(series_names,'1.0','IgnoreCase',true));
+    
+    % Look for the CTP series using keywords
+    % Old include uses 0.5, 4D, Perfusion, Dynamic, Head
+    % Old exclude uses CTA, Summary, Bone, MIP, 1.0
+    CTP_include = {'0.5','CBP' ,'4D' ,'Perfusion' ,'Dynamic'};
+    CTP_exclude = {'MIP' ,'Untitled' ,'Stack' ,'Summary' ,'CTA' ,'SUB' ,'CTV' ,'Bone' ,'Soft' ,'Maps' ,'Body' ,'Axial' ,'Coronal' ,'Tissue' ,'Soft' ,'Sft' ,'Removed' ,'HCT' ,'Map' ,'With' ,};
+    CTP_idx = true(size(series_names)); % Initialize to include everything
+    for kk = 1:length(CTP_include)
+        CTP_idx = or(CTP_idx, contains(series_names, CTP_include{kk}, 'IgnoreCase', true));
+    end
+    for kk = 1:length(CTP_exclude)
+        CTP_idx = and(CTP_idx, ~contains(series_names, CTP_exclude{kk}, 'IgnoreCase', true));
+    end
     
     % Grab ALL files from the NCCT series
     NCCT_series = [];
