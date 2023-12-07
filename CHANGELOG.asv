@@ -1,10 +1,7 @@
 ## [0.1.7] - 2023-12-07
 ### Changed
 - `matchNCCTandFSTROKE.m` Streamlines the keyword search using for loop instead of single lines for each keyword.
-- `matchNCCTandFSTROKE.m` CTP exclusion keywords updated. Removed "Head" CTP inclusion keyword.
-
-### Fixed
-- `matchNCCTandFSTROKE.m` Initialized keyword search starts by including everything. Changed to false.
+- `matchNCCTandFSTROKE.m` 
 
 ## [0.1.6] - 2023-11-20
 ### Changed

@@ -148,7 +148,7 @@ for i = 1:length(subjects)
     % Look for the NCCT series using keywords
     NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'};
     NCCT_exclude = {'bone', '5.0', '0.5', 'soft_tissue'};
-    NCCT_idx = true(size(series_names)); % Initialize to include everything
+    NCCT_idx = false(size(series_names)); % Initialize to include everything
     for kk = 1:length(NCCT_include)
         NCCT_idx = or(NCCT_idx, contains(series_names, NCCT_include{kk}, 'IgnoreCase', true));
     end
@@ -174,7 +174,7 @@ for i = 1:length(subjects)
     % Old exclude uses CTA, Summary, Bone, MIP, 1.0
     CTP_include = {'0.5','CBP' ,'4D' ,'Perfusion' ,'Dynamic'};
     CTP_exclude = {'MIP' ,'Untitled' ,'Stack' ,'Summary' ,'CTA' ,'SUB' ,'CTV' ,'Bone' ,'Soft' ,'Maps' ,'Body' ,'Axial' ,'Coronal' ,'Tissue' ,'Soft' ,'Sft' ,'Removed' ,'HCT' ,'Map' ,'With' ,};
-    CTP_idx = true(size(series_names)); % Initialize to include everything
+    CTP_idx = false(size(series_names)); % Initialize to include everything
     for kk = 1:length(CTP_include)
         CTP_idx = or(CTP_idx, contains(series_names, CTP_include{kk}, 'IgnoreCase', true));
     end
