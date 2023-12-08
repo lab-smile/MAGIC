@@ -147,7 +147,7 @@ for i = 1:length(subjects)
 
     % Look for the NCCT series using keywords
     NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'};
-    NCCT_exclude = {'bone', '5.0', '0.5', 'soft_tissue', 'Untitled', 'MIP', 'Stack', 'Summary', 'CTA', 'SUB', 'Dynamic', 'Perfusion', 'Lung', 'Sft', 'Soft'};
+    NCCT_exclude = {'bone', '0.5', 'soft_tissue', 'Untitled', 'MIP', 'Stack', 'Summary', 'CTA', 'SUB', 'Dynamic', 'Perfusion', 'Lung', 'Sft', 'Soft'};
     NCCT_idx = false(size(series_names)); % Initialize to include everything
     for kk = 1:length(NCCT_include)
         NCCT_idx = or(NCCT_idx, contains(series_names, NCCT_include{kk}, 'IgnoreCase', true));
@@ -173,7 +173,7 @@ for i = 1:length(subjects)
     % Old include uses 0.5, 4D, Perfusion, Dynamic, Head
     % Old exclude uses CTA, Summary, Bone, MIP, 1.0
     CTP_include = {'0.5','CBP' ,'4D' ,'Perfusion' ,'Dynamic'};
-    CTP_exclude = {'MIP' ,'Untitled' ,'Stack' ,'Summary' ,'CTA' ,'SUB' ,'CTV' ,'Bone' ,'Soft' ,'Maps' ,'Body' ,'Axial' ,'Coronal' ,'Tissue' ,'Soft' ,'Sft' ,'Removed' ,'HCT' ,'Map' ,'With' ,};
+    CTP_exclude = {'2.0', 'MIP' ,'Untitled' ,'Stack' ,'Summary' ,'CTA' ,'SUB' ,'CTV' ,'Bone' ,'Soft' ,'Maps' ,'Body' ,'Axial' ,'Coronal' ,'Tissue' ,'Soft' ,'Sft' ,'Removed' ,'HCT' ,'Map' ,'With' ,};
     CTP_idx = false(size(series_names)); % Initialize to include everything
     for kk = 1:length(CTP_include)
         CTP_idx = or(CTP_idx, contains(series_names, CTP_include{kk}, 'IgnoreCase', true));
@@ -252,7 +252,7 @@ for i = 1:length(subjects)
     slice_num = 1;
     
     % Avoid first and last 3 NCCT slices. Also skip every 4 slices?
-    for jj = 4:offset_range:length(NCCT_zcoords)-3
+    for jj = 1:offset_range:length(NCCT_zcoords)
         
         % Grab a z-coord
         NCCT_z = NCCT_zs(jj);
@@ -305,6 +305,7 @@ for i = 1:length(subjects)
         
         % Convert perfusion map to specific ranges and save appropriately
         % -- CBF: 0-60, CBV: 0-4, MTT: 0-12, TTP: 0-25
+        try
         CBF_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
         processPerf(CBF_path,partitionPath,subject_name,correspondingSlice,jj,mask,'cbf')
 
@@ -316,6 +317,11 @@ for i = 1:length(subjects)
 
         TTP_path = fullfile(fstrokePath,subject_name,'tmax.nii.gz');
         processPerf(TTP_path,partitionPath,subject_name,correspondingSlice,jj,mask,'ttp')
+
+        catch
+            fprintf("Missing FSTROKE output\n")
+            continue;
+        end
     end
     
 %     % Skip the first 4 and last 4 slices.

@@ -7,6 +7,8 @@
 - `matchNCCTandFSTROKE.m` Initialized keyword search starts by including everything. Changed to false.
 - `matchNCCTandFSTROKE.m` Resolved an issue where metafield "PerFrameFunctionalGroupsSequence" does not exist. Added a try catch statement to avoid if not found.
 - `matchNCCTandFSTROKE.m` Resolved an issue where excluded NCCT keywords are insufficient. Updated them.
+- `matchNCCTandFSTROKE.m` Updated keyword to remove 5.0 from NCCT and include 2.0 from CTP.
+- `matchNCCTandFSTROKE.m` Resolved an issue where an FSTROKE output is non-existent causing a crash. Now uses try catch to avoid it.
 
 ## [0.1.6] - 2023-11-20
 ### Changed
