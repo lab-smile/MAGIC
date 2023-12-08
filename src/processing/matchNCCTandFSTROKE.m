@@ -226,14 +226,18 @@ for i = 1:length(subjects)
     
     % Create map of all NCCT z-locations
     % - Loop through each dcm file
-    for ii = 1:length(NCCT_files)
-        NCCT_file = NCCT_files(ii);
-        if strcmp(NCCT_file.name(1),'.'),continue;end
-        NCCT_filepath = fullfile(NCCT_file.folder,NCCT_file.name); % Construct filepath to NCCT file
-        NCCT_info = dicominfo(NCCT_filepath);                      % Read NCCT dcm info
-        coords = NCCT_info.ImagePositionPatient;
-        z_coord = coords(3);
-        NCCT_zcoords(z_coord) = NCCT_filepath;
+    try
+        for ii = 1:length(NCCT_files)
+            NCCT_file = NCCT_files(ii);
+            if strcmp(NCCT_file.name(1),'.'),continue;end
+            NCCT_filepath = fullfile(NCCT_file.folder,NCCT_file.name); % Construct filepath to NCCT file
+            NCCT_info = dicominfo(NCCT_filepath);                      % Read NCCT dcm info
+            coords = NCCT_info.ImagePositionPatient;
+            z_coord = coords(3);
+            NCCT_zcoords(z_coord) = NCCT_filepath;
+        end
+    catch
+        continue;
     end
     
     try
