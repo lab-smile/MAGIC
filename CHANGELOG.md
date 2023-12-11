@@ -5,6 +5,7 @@
 
 ### Fixed
 - `matchNCCTandFSTROKE.m` Resolved an issue where the NCCT saved but no FSTROKE data is saved. Now saves NCCT once FSTROKE output is saved first.
+- `matchNCCTandFSTROKE.m` Resolved an issue where no folder existed for the error logs. Now creates an error folder when called.
 
 ## [0.1.7] - 2023-12-07
 ### Changed

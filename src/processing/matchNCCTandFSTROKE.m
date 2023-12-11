@@ -103,7 +103,8 @@ subjects(1:2) = [];         % Get rid of . and ..
 
 % Save a separate error flag path
 [parentFolder,~,~] = fileparts(deidPath);
-errorFlagPath = fullfile(parentFolder,'ct_deidentified_error_flags');
+errorFlagPath = fullfile(parentFolder,'error_flags');
+if ~exist(errorFlagPath,'dir'), mkdir(errorFlagPath); end
 
 fstroke = dir(fstrokePath); % Directory list of fstroke folders
 fstroke(1:2) = [];
