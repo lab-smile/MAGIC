@@ -1,4 +1,4 @@
-% function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
+function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
 %% Match NCCT and FSTROKE Perfusion Map Slices
 % This is the main function for matching NCCT and FSTROKE perfusion map
 % slices. This functions requires that the dataset contains NCCT and
@@ -45,12 +45,12 @@
 
 %% Adjustable Variables
 %#########################################
-clc; clear; close all; warning off;
+% clc; clear; close all; warning off;
 % Deid folders must follow the order: Subject -> Study -> Session -> Image
 % Fstroke folders must contain 
-deidPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_deid_fstroke';
-fstrokePath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_fstroke';
-partitionPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_partition';
+% deidPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_deid_fstroke';
+% fstrokePath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_fstroke';
+% partitionPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_partition';
 %#########################################
 
 %% Initialization 
@@ -101,6 +101,10 @@ subjects = dir(deidPath);   % Directory list of input folders
 subjects(end) = [];         % Get rid of "completed" folder
 subjects(1:2) = [];         % Get rid of . and ..
 
+% Save a separate error flag path
+[parentFolder,~,~] = fileparts(deidPath);
+errorFlagPath = fullfile(parentFolder,'ct_deidentified_error_flags');
+
 fstroke = dir(fstrokePath); % Directory list of fstroke folders
 fstroke(1:2) = [];
 
@@ -134,16 +138,16 @@ for i = 1:length(subjects)
     NCCT_zcoords = containers.Map('KeyType','double','ValueType','char');
     CTP_zcoords = containers.Map('KeyType','double','ValueType','char');
     
-%     % Look for the NCCT series using keywords
-%     NCCT_idx = contains(series_names,'without','IgnoreCase',true);
-%     NCCT_idx = or(NCCT_idx,contains(series_names,'W-O','IgnoreCase',true));
-%     NCCT_idx = or(NCCT_idx,contains(series_names,'NCCT','IgnoreCase',true));
-%     NCCT_idx = or(NCCT_idx,contains(series_names,'NON-CON','IgnoreCase',true));
-%     NCCT_idx = or(NCCT_idx,contains(series_names,'NON_CON','IgnoreCase',true));
-%     NCCT_idx = and(NCCT_idx,~contains(series_names,'bone','IgnoreCase',true));
-%     NCCT_idx = and(NCCT_idx,~contains(series_names,'5.0','IgnoreCase',true));
-%     NCCT_idx = and(NCCT_idx,~contains(series_names,'0.5','IgnoreCase',true));
-%     NCCT_idx = and(NCCT_idx,~contains(series_names,'soft_tissue','IgnoreCase',true));
+    %     % Look for the NCCT series using keywords
+    %     NCCT_idx = contains(series_names,'without','IgnoreCase',true);
+    %     NCCT_idx = or(NCCT_idx,contains(series_names,'W-O','IgnoreCase',true));
+    %     NCCT_idx = or(NCCT_idx,contains(series_names,'NCCT','IgnoreCase',true));
+    %     NCCT_idx = or(NCCT_idx,contains(series_names,'NON-CON','IgnoreCase',true));
+    %     NCCT_idx = or(NCCT_idx,contains(series_names,'NON_CON','IgnoreCase',true));
+    %     NCCT_idx = and(NCCT_idx,~contains(series_names,'bone','IgnoreCase',true));
+    %     NCCT_idx = and(NCCT_idx,~contains(series_names,'5.0','IgnoreCase',true));
+    %     NCCT_idx = and(NCCT_idx,~contains(series_names,'0.5','IgnoreCase',true));
+    %     NCCT_idx = and(NCCT_idx,~contains(series_names,'soft_tissue','IgnoreCase',true));
 
     % Look for the NCCT series using keywords
     NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'};
@@ -156,19 +160,18 @@ for i = 1:length(subjects)
         NCCT_idx = and(NCCT_idx, ~contains(series_names, NCCT_exclude{kk}, 'IgnoreCase', true));
     end
     
-    
-%     % Look for CTP series using keywords
-%     CTP_idx = contains(series_names,'0.5','IgnoreCase',true);
-%     CTP_idx = or(CTP_idx,contains(series_names,'4D','IgnoreCase',true));
-%     CTP_idx = or(CTP_idx,contains(series_names,'Perfusion','IgnoreCase',true));
-%     CTP_idx = or(CTP_idx,contains(series_names,'Dynamic','IgnoreCase',true));
-%     CTP_idx = or(CTP_idx,contains(series_names,'Head','IgnoreCase',true));
-%     CTP_idx = and(CTP_idx,~contains(series_names,'CTA','IgnoreCase',true));
-%     CTP_idx = and(CTP_idx,~contains(series_names,'Summary','IgnoreCase',true));
-%     CTP_idx = and(CTP_idx,~contains(series_names,'Bone','IgnoreCase',true));
-%     CTP_idx = and(CTP_idx,~contains(series_names,'MIP','IgnoreCase',true));
-%     CTP_idx = and(CTP_idx,~contains(series_names,'1.0','IgnoreCase',true));
-    
+    %     % Look for CTP series using keywords
+    %     CTP_idx = contains(series_names,'0.5','IgnoreCase',true);
+    %     CTP_idx = or(CTP_idx,contains(series_names,'4D','IgnoreCase',true));
+    %     CTP_idx = or(CTP_idx,contains(series_names,'Perfusion','IgnoreCase',true));
+    %     CTP_idx = or(CTP_idx,contains(series_names,'Dynamic','IgnoreCase',true));
+    %     CTP_idx = or(CTP_idx,contains(series_names,'Head','IgnoreCase',true));
+    %     CTP_idx = and(CTP_idx,~contains(series_names,'CTA','IgnoreCase',true));
+    %     CTP_idx = and(CTP_idx,~contains(series_names,'Summary','IgnoreCase',true));
+    %     CTP_idx = and(CTP_idx,~contains(series_names,'Bone','IgnoreCase',true));
+    %     CTP_idx = and(CTP_idx,~contains(series_names,'MIP','IgnoreCase',true));
+    %     CTP_idx = and(CTP_idx,~contains(series_names,'1.0','IgnoreCase',true));
+
     % Look for the CTP series using keywords
     % Old include uses 0.5, 4D, Perfusion, Dynamic, Head
     % Old exclude uses CTA, Summary, Bone, MIP, 1.0
@@ -185,6 +188,11 @@ for i = 1:length(subjects)
     % Grab ALL files from the NCCT series
     NCCT_series = [];
     if ~any(NCCT_idx) % Cannot find an NCCT series
+        fileID = fopen(flagFile,'w');
+        fclose(fileID);
+        errorFlagFile = fullfile(errorFlagPath,[subject_name,'_missing_NCCT.txt']);
+        fid = fopen(errorFlagFile,'w');
+        fclose(fid);
         fprintf('Cannot locate NCCT series for subject %s.\n',subject.name);
         continue;
     else
@@ -210,17 +218,38 @@ for i = 1:length(subjects)
     % 50-65MB. Other files tend to have <100KB and one file with 20-25MB.
     CTP_series = [];
     if ~any(CTP_idx) % Cannot find a CTP series
+        fileID = fopen(flagFile,'w');
+        fclose(fileID);
+        errorFlagFile = fullfile(errorFlagPath,[subject_name,'_missing_CTP.txt']);
+        fid = fopen(errorFlagFile,'w');
+        fclose(fid);
         fprintf('Cannot locate CTP series for subject %s.\n',subject.name);
         continue;
     else
         CTP_series = series_names(CTP_idx);
         if length(CTP_series) > 1 || length(CTP_series) == 0
+            fileID = fopen(flagFile,'w');
+            fclose(fileID);
+            errorFlagFile = fullfile(errorFlagPath,[subject_name,'_multiple_CTP.txt']);
+            fid = fopen(errorFlagFile,'w');
+            fclose(fid);
             fprintf('More than one CTP series found for %s.\n',subject_name);
+            continue;
         else
-            CTP_series_name = string(CTP_series(1));
-            CTP_folder = dir(fullfile(study_name.folder,study_name.name,CTP_series_name));
-            [~,byte_idx] = max([CTP_folder.bytes]);
-            CTP_file = dicominfo(fullfile(CTP_folder(byte_idx).folder,CTP_folder(byte_idx).name));
+            try
+                CTP_series_name = string(CTP_series(1));
+                CTP_folder = dir(fullfile(study_name.folder,study_name.name,CTP_series_name));
+                [~,byte_idx] = max([CTP_folder.bytes]);
+                CTP_file = dicominfo(fullfile(CTP_folder(byte_idx).folder,CTP_folder(byte_idx).name));
+            catch
+                fileID = fopen(flagFile,'w');
+                fclose(fileID);
+                errorFlagFile = fullfile(errorFlagPath,[subject_name,'_error_loading_CTP.txt']);
+                fid = fopen(errorFlagFile,'w');
+                fclose(fid);
+                fprintf('Error loading CTP series for %s.\n',subject_name);
+                continue;
+            end
         end
     end
     
@@ -237,6 +266,12 @@ for i = 1:length(subjects)
             NCCT_zcoords(z_coord) = NCCT_filepath;
         end
     catch
+        fileID = fopen(flagFile,'w');
+        fclose(fileID);
+        errorFlagFile = fullfile(errorFlagPath,[subject_name,'_error_NCCT_coordinates.txt']);
+        fid = fopen(errorFlagFile,'w');
+        fclose(fid);
+        fprintf("Cannot find NCCT coordinates for %s\n", subject.name)
         continue;
     end
     
@@ -248,8 +283,15 @@ for i = 1:length(subjects)
             CTP_zcoords(z_coord) = string(ii);
         end
     catch
+        fileID = fopen(flagFile,'w');
+        fclose(fileID);
+        errorFlagFile = fullfile(errorFlagPath,[subject_name,'_missing_metadata_ImagePositionPatient.txt']);
+        fid = fopen(errorFlagFile,'w');
+        fclose(fid);
+        fprintf("Cannot find metadata for ImagePositionPatient for %s\n", subject.name)
         continue;
     end
+    
     % Convert the stored z-coordinates into a useable matrix
     NCCT_zs = cell2mat(keys(NCCT_zcoords));
     CTP_zs = cell2mat(keys(CTP_zcoords));
@@ -302,32 +344,37 @@ for i = 1:length(subjects)
         % Concatenate all 3 slices together
         NCCT_img = cat(3, NCCTminus_img, NCCT_img, NCCTplus_img);
         
+        % Convert perfusion map to specific ranges and save appropriately
+        % -- CBF: 0-60, CBV: 0-4, MTT: 0-12, TTP: 0-25
+        try
+            CBF_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
+            processPerf(CBF_path,partitionPath,subject_name,correspondingSlice,jj,mask,'cbf')
+    
+            CBV_path = fullfile(fstrokePath,subject_name,'cbv.nii.gz');
+            processPerf(CBV_path,partitionPath,subject_name,correspondingSlice,jj,mask,'cbv')
+    
+            MTT_path = fullfile(fstrokePath,subject_name,'mtt.nii.gz');
+            processPerf(MTT_path,partitionPath,subject_name,correspondingSlice,jj,mask,'mtt')
+    
+            TTP_path = fullfile(fstrokePath,subject_name,'tmax.nii.gz');
+            processPerf(TTP_path,partitionPath,subject_name,correspondingSlice,jj,mask,'ttp')
+        
+        catch
+            fileID = fopen(flagFile,'w');
+            fclose(fileID);
+            errorFlagFile = fullfile(errorFlagPath,[subject_name,'_missing_FSTROKE.txt']);
+            fid = fopen(errorFlagFile,'w');
+            fclose(fid);
+            fprintf("Missing FSTROKE output for %s\n", subject.name)
+            continue;
+        end
+
         % Save NCCT image
         saveName = strcat(subject_name,'_',num2str(jj),'.png');
         savePath = fullfile(partitionPath,'NCCT',saveName);
         imwrite(NCCT_img,savePath)
-        
-        % Convert perfusion map to specific ranges and save appropriately
-        % -- CBF: 0-60, CBV: 0-4, MTT: 0-12, TTP: 0-25
-        try
-        CBF_path = fullfile(fstrokePath,subject_name,'cbf.nii.gz');
-        processPerf(CBF_path,partitionPath,subject_name,correspondingSlice,jj,mask,'cbf')
 
-        CBV_path = fullfile(fstrokePath,subject_name,'cbv.nii.gz');
-        processPerf(CBV_path,partitionPath,subject_name,correspondingSlice,jj,mask,'cbv')
-
-        MTT_path = fullfile(fstrokePath,subject_name,'mtt.nii.gz');
-        processPerf(MTT_path,partitionPath,subject_name,correspondingSlice,jj,mask,'mtt')
-
-        TTP_path = fullfile(fstrokePath,subject_name,'tmax.nii.gz');
-        processPerf(TTP_path,partitionPath,subject_name,correspondingSlice,jj,mask,'ttp')
-
-        catch
-            fprintf("Missing FSTROKE output\n")
-            continue;
-        end
     end
-    
 %     % Skip the first 4 and last 4 slices.
 %     first_slice_loc = NCCT_slice_offset+1;    
 %     last_slice_loc = first_slice_loc + offset_range * floor((length(NCCT_files)-first_slice_loc) / offset_range);
@@ -385,7 +432,7 @@ fprintf("------------------------------------------------------------------\n")
 fprintf("Finished...matchNCCTandFSTROKE.m\n")
 fprintf("------------------------------------------------------------------\n")
 
-% end
+end
 
 %% Local Functions
 function processPerf(dataPath,partitionPath,subject_name,loc,jj,mask,type)

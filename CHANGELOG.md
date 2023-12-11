@@ -1,3 +1,11 @@
+## [0.1.8] - 2023-12-11
+### Added
+- `matchNCCTandFSTROKE.m` Now saves an error file with associated subject ID in parent folder.
+- `matchNCCTandFSTROKE.m` Now creates a normal flag as if it works fine.
+
+### Fixed
+- `matchNCCTandFSTROKE.m` Resolved an issue where the NCCT saved but no FSTROKE data is saved. Now saves NCCT once FSTROKE output is saved first.
+
 ## [0.1.7] - 2023-12-07
 ### Changed
 - `matchNCCTandFSTROKE.m` Streamlines the keyword search using for loop instead of single lines for each keyword.
