@@ -3,7 +3,6 @@ function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
 % This is the main function for matching NCCT and FSTROKE perfusion map
 % slices. This functions requires that the dataset contains NCCT and
 % perfusion map data. Currently works on UFHealth data. The steps follow:
-% 
 %   - Load all NCCT slices and perfusion map volumes
 %   - List all z-locations from each NCCT slice and pull z-locations from
 %     original perfusion volume.
@@ -13,6 +12,8 @@ function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
 %     'NCCT_slice_offset' above and below selected slice.
 %   - NCCT ranges do not exceed the offset range to prevent overlap using
 %     'offset_range'.
+%   - Slices with only >80% pixel counts are saved. This removes the very
+%     top and bottom of the head.
 % 
 % This should work with NCCT of any resolution. For example, NCCT with
 % 1.0mm resolution (SliceThickness) has 160 slices. NCCT with 0.5mm
@@ -22,11 +23,20 @@ function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
 % 
 % Expect CTP perfusion maps to be from FSTROKE with 0.5mm resolution with
 % 320 slices. Each .nii.gz file contains 512x512x320 single. Z-locations
-% are taken from ORIGINAL CTP from the deidentified data. 
-% 
+% are taken from ORIGINAL CTP from the deidentified data.
 %   - NCCT z-loc are stored in ImagePositionPatient per file.
 %   - All CTP z-loc are stored in PerFrameFunctionalGroupsSequence >
 %     Item_SLICE# > PlanePositionSequence > Item_1 > ImagePositionPatient.
+% 
+% Error logs are created in a separate folder outside the parent folder.
+% These detail the reason why a subject does not have slices saved.
+%   - Does not possess an NCCT series or cannot find one.
+%   - Does not possess a CTP series or cannot find one.
+%   - There are too many CTP series.
+%   - There is an error loading the CTP series.
+%   - There are no NCCT coordinates available in the NCCT series.
+%   - The metadata "ImagePositionPatient" cannot be found.
+%   - The subject does not have an F-Stroke output.
 % 
 %   Kyle See 10/16/2023
 %   Smart Medical Informatics Learning and Evaluation (SMILE) Laboratory
