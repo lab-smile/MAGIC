@@ -1,4 +1,4 @@
-function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
+% function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
 %% Match NCCT and FSTROKE Perfusion Map Slices
 % This is the main function for matching NCCT and FSTROKE perfusion map
 % slices. This functions requires that the dataset contains NCCT and
@@ -55,12 +55,12 @@ function [] = matchNCCTandFSTROKE(deidPath,fstrokePath,partitionPath)
 
 %% Adjustable Variables
 %#########################################
-% clc; clear; close all; warning off;
+clc; clear; close all; warning off;
 % Deid folders must follow the order: Subject -> Study -> Session -> Image
 % Fstroke folders must contain 
-% deidPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_deid_fstroke';
-% fstrokePath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_fstroke';
-% partitionPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\test_partition';
+deidPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\ct_deidentified';
+fstrokePath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\fstroke_output';
+partitionPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\partition';
 %#########################################
 
 %% Initialization 
@@ -443,7 +443,7 @@ fprintf("------------------------------------------------------------------\n")
 fprintf("Finished...matchNCCTandFSTROKE.m\n")
 fprintf("------------------------------------------------------------------\n")
 
-end
+% end
 
 %% Local Functions
 function processPerf(dataPath,partitionPath,subject_name,loc,jj,mask,type)

@@ -1,3 +1,7 @@
+## [0.1.9] - 2023-02-02
+### Added
+- `process.py` New Python file which performs the same function as MATLAB processing files. Intended to improve saved file quality of slices.
+
 ## [0.1.8] - 2023-12-11
 ### Added
 - `matchNCCTandFSTROKE.m` Now saves an error file with associated subject ID in parent folder.

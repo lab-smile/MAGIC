@@ -31,9 +31,9 @@
 %% Adjustable Variables
 % #########################################
 close all; clear; clc;
-inputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A3';
-resultsPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A3_results';
-outputPath = 'D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A3_results_paired';
+inputPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A2';
+resultsPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A2_L1';
+outputPath = 'C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\Testing MAGIC pipeline\dataset_A2_L1_output';
 % #########################################
 % Add utilities
 % - apply_image_denoising.m
