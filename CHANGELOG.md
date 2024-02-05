@@ -1,3 +1,7 @@
+## [0.1.10] - 2023-02-05
+### Added
+- `process.py` Now adapted matchNCCTandFSTROKE.m
+
 ## [0.1.9] - 2023-02-02
 ### Added
 - `process.py` New Python file which performs the same function as MATLAB processing files. Intended to improve saved file quality of slices.
