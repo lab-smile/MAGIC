@@ -68,9 +68,11 @@ from scipy.ndimage import label, generate_binary_structure, binary_closing, bina
 from skimage import exposure
 from skimage.transform import resize
 import nibabel as nib
+import scipy.io
 
+from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
-import time
+#import time
 
 
 def create_folder(folder_path):
@@ -130,8 +132,13 @@ def process_CTP(fstrokePath, subject, loc, mask, CTPType):
     info = nib.load(dataPath)
     img = info.get_fdata()
     
-    slice_index = loc
+    colormap_var = scipy.io.loadmat(r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\rapid_colormap.mat")
+    colormap = colormap_var['Rapid_U']
+    custom_colormap = ListedColormap(colormap)
     
+    
+    slice_index = loc
+    print("YES")
     img_slice = rotate(img[:,:,slice_index], 270) # Rotate so anterior faces up
     img_slice = np.interp(img_slice, (np.min(img_slice), np.max(img_slice)), [0,1]) # Normalize between 0 and 1
     img_slice = exposure.equalize_adapthist(img_slice, clip_limit=0.02) # Apply adaptive histogram with clip limit
@@ -139,11 +146,13 @@ def process_CTP(fstrokePath, subject, loc, mask, CTPType):
     
     img_slice[~mask] = 0 # Apply a mask
     img_slice = (img_slice*255).astype(np.uint8) # Convert to uint8
-    plt.imshow(img_slice, cmap='gray')
+    img_slice = custom_colormap(img_slice)
+    img_slice = img_slice[:,:,:3]
+    plt.imshow(img_slice, cmap=custom_colormap)
     plt.title(CTPType)
     plt.show()
     
-    img_slice = np.stack([img_slice, img_slice, img_slice], axis=-1)
+    #img_slice = np.stack([img_slice, img_slice, img_slice], axis=-1)
     
     return img_slice
 
@@ -257,6 +266,8 @@ fstrokePath = r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\fst
 partitionPath = r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\partition_py"
 
 
+
+
 """
 Above: Setup the input folders. Only change these parameters.
 Below:  Initialize all variables to be used in slice matching. 
@@ -273,7 +284,7 @@ NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'}; # Inclusion ter
 NCCT_exclude = {'bone', '0.5', 'soft_tissue', 'Untitled', 'MIP', 'Stack', 'Summary', 'CTA', 'SUB', 'Dynamic', 'Perfusion', 'Lung', 'Sft', 'Soft', 'Scanogram'}; # Exclusionary terms to serach for NCCT
 CTP_include = {'0.5','CBP' ,'4D' ,'Perfusion' ,'Dynamic'}; # Inclusionary terms to search for CTP
 CTP_exclude = {'2.0', 'MIP' ,'Untitled' ,'Stack' ,'Summary' ,'CTA' ,'SUB' ,'CTV' ,'Bone' ,'Soft' ,'Maps' ,'Body' ,'Axial' ,'Coronal' ,'Tissue' ,'Soft' ,'Sft' ,'Removed' ,'HCT' ,'Map' ,'With' ,}; # Exclusionary terms to search for CTP
-exclude_slice = 5
+exclude_percent = 0.2 # Decimal percentage of how many slices to exclude from top and bottom
 
 """
 In the MATLAB equivalent script, matchNCCTandFSTROKE.m, there are scripts called fix_study() and fix_series() which are used here. The deidentified files on HPG and test files are already fixed so I cannot try test fixes here. Assume for now that data is fixed. Come back here to replace. Files can be found on the PHI computer.
@@ -405,7 +416,12 @@ for subject in subjects:
     slice variable. Each NCCT slice in the non-RAPID data have large deviations
     from each slice (5-15mm gap) so we process every non-excluded slice.
     """
-    for jj in range(exclude_slice, len(NCCT_zcoords)-exclude_slice):
+    if len(NCCT_zcoords) > 100:
+        step_size = 4
+    else:
+        step_size = 1
+    cutoff = round(len(NCCT_zcoords)*exclude_percent)
+    for jj in range(cutoff, len(NCCT_zcoords)-cutoff, step_size):
         
         # Grab ONE NCCT z-coordinate
         NCCT_z = NCCT_zs[jj]
