@@ -132,27 +132,29 @@ def process_CTP(fstrokePath, subject, loc, mask, CTPType):
     info = nib.load(dataPath)
     img = info.get_fdata()
     
-    colormap_var = scipy.io.loadmat(r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\rapid_colormap.mat")
-    colormap = colormap_var['Rapid_U']
-    custom_colormap = ListedColormap(colormap)
-    
+    #colormap_var = scipy.io.loadmat(r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\rapid_colormap.mat")
+    #colormap = colormap_var['Rapid_U']
+    #custom_colormap = ListedColormap(colormap)
     
     slice_index = loc
     print("YES")
     img_slice = rotate(img[:,:,slice_index], 270) # Rotate so anterior faces up
     img_slice = np.interp(img_slice, (np.min(img_slice), np.max(img_slice)), [0,1]) # Normalize between 0 and 1
-    img_slice = exposure.equalize_adapthist(img_slice, clip_limit=0.02) # Apply adaptive histogram with clip limit
+    #clip_limit = 1.5 * np.std(img_slice)
+    #img_slice = exposure.equalize_adapthist(img_slice, clip_limit=clip_limit) # Apply adaptive histogram with clip limit
+    clahe = cv2.createCLAHE(clipLimit=5.0, tileGridSize=(8, 8))
+    img_slice = clahe.apply((img_slice * 255).astype(np.uint8)) / 255.0  # Convert back to [0, 1] range
     img_slice = resize(img_slice, (256, 256), anti_aliasing=True) # Resize to 256 by 256
     
     img_slice[~mask] = 0 # Apply a mask
-    img_slice = (img_slice*255).astype(np.uint8) # Convert to uint8
-    img_slice = custom_colormap(img_slice)
-    img_slice = img_slice[:,:,:3]
-    plt.imshow(img_slice, cmap=custom_colormap)
+    #img_slice = (img_slice*255).astype(np.uint8) # Convert to uint8
+    #img_slice = custom_colormap(img_slice)
+    #img_slice = img_slice[:,:,:3]
+    plt.imshow(img_slice, cmap='gray')
     plt.title(CTPType)
     plt.show()
     
-    #img_slice = np.stack([img_slice, img_slice, img_slice], axis=-1)
+    img_slice = np.stack([img_slice, img_slice, img_slice], axis=-1)
     
     return img_slice
 
@@ -284,7 +286,7 @@ NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'}; # Inclusion ter
 NCCT_exclude = {'bone', '0.5', 'soft_tissue', 'Untitled', 'MIP', 'Stack', 'Summary', 'CTA', 'SUB', 'Dynamic', 'Perfusion', 'Lung', 'Sft', 'Soft', 'Scanogram'}; # Exclusionary terms to serach for NCCT
 CTP_include = {'0.5','CBP' ,'4D' ,'Perfusion' ,'Dynamic'}; # Inclusionary terms to search for CTP
 CTP_exclude = {'2.0', 'MIP' ,'Untitled' ,'Stack' ,'Summary' ,'CTA' ,'SUB' ,'CTV' ,'Bone' ,'Soft' ,'Maps' ,'Body' ,'Axial' ,'Coronal' ,'Tissue' ,'Soft' ,'Sft' ,'Removed' ,'HCT' ,'Map' ,'With' ,}; # Exclusionary terms to search for CTP
-exclude_percent = 0.2 # Decimal percentage of how many slices to exclude from top and bottom
+exclude_percent = 0.45 # Decimal percentage of how many slices to exclude from top and bottom
 
 """
 In the MATLAB equivalent script, matchNCCTandFSTROKE.m, there are scripts called fix_study() and fix_series() which are used here. The deidentified files on HPG and test files are already fixed so I cannot try test fixes here. Assume for now that data is fixed. Come back here to replace. Files can be found on the PHI computer.
@@ -466,6 +468,8 @@ for subject in subjects:
         # Concatenate base and offset slices to create pseudo-3D image
         NCCT_img = np.stack([NCCT_img_below, NCCT_img_base, NCCT_img_above], axis=2)
         
+        NCCT_img = np.interp(NCCT_img, (np.min(NCCT_img), np.max(NCCT_img)), [0,1])
+        
         try:
             MTT_img = process_CTP(fstrokePath, subject, correspondingCTPnumber, mask, 'mtt')
             TTP_img = process_CTP(fstrokePath, subject, correspondingCTPnumber, mask, 'ttp')
@@ -476,8 +480,10 @@ for subject in subjects:
         
         # Concatenate NCCT and all CTP slices
         final_img = np.hstack([NCCT_img, MTT_img, TTP_img, CBF_img, CBV_img])
-        
-        filename = os.path.join(partitionPath,subject+'_'+str(jj)+'.png')
+        plt.imshow(final_img)
+        plt.show()
+        #filename = os.path.join(partitionPath,subject+'_'+str(jj)+'.png')
+        filename = os.path.join(partitionPath,subject+'cliplimit_10.png')
         plt.imsave(filename,final_img)
         
         
