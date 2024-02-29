@@ -189,13 +189,18 @@ def pct_brainMask_noEyes(im, lb, ub, dsize):
     
     # Find the largest connected component
     sizes = np.bincount(labeled_mask.ravel())
-    largest_label = np.argmax(sizes[1:]) + 1
-    new_mask = (labeled_mask == largest_label)
     
-    try:
-        # Attempt to perform imclose
-        new_mask = binary_closing(new_mask, structure=str_element)
-    except:
-        pass
+    # Check if sizes array is not empty
+    if len(sizes) > 1:
+        largest_label = np.argmax(sizes[1:]) + 1
+        new_mask = (labeled_mask == largest_label)
+
+        try:
+            # Attempt to perform imclose
+            new_mask = binary_closing(new_mask, structure=str_element)
+        except:
+            pass
+    else:
+        new_mask = np.zeros_like(im,dtype=bool)
     
     return mask

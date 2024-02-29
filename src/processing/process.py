@@ -3,6 +3,7 @@
 @author: kylebsee
 
 Match NCCT and FSTROKE output slices.
+It DOES NOT modify the original files.
 
 Simplified overview: Repeat steps for each subject.
     1. Use NCCT and CTP keywords to identify NCCT and CTP folders.
@@ -24,14 +25,14 @@ Changes from MATLAB version:
     - Removed manual offset parameters. Replaced with percentage removal from start and end.
     - Now uses argparse to handle arguments. Callable in terminal.
     - Removed perfusion map folders.
-"""
 
-"""
-What your data should look like (structure may vary):
+===============================================================================
+What your data should look like (exact wording may vary):
 
-/---------/
-\--INPUT--\
-/---------/
+#---------#
+#  INPUT  #
+#---------#
+
 [deidPath]
 100221
     CTA_HEAD_PERF_AND_NECK_BRD_BM_I...
@@ -52,9 +53,11 @@ What your data should look like (structure may vary):
     tmax.nii.gz
     ttp.nii.gz
 
-/----------/
-\--OUTPUT--\
-/----------/
+
+#----------#
+#  OUTPUT  #
+#----------#
+
 [partitionPath]
 100221_46
 100221_50
@@ -66,6 +69,7 @@ What your data should look like (structure may vary):
 
 """
 
+# Import libraries
 import os, argparse, glob
  # Req. pylibjpeg + GDCM + pylibjpeg-libjpeg
 from process_functions import create_folder, create_error_file, process_CTP, process_NCCT
@@ -77,6 +81,10 @@ from tqdm import tqdm
 #import time
 
 parser = argparse.ArgumentParser()
+
+#===================#
+#  argument parser  #
+#===================#
 
 # Required paths
 parser.add_argument('--deidPath', required=False, default=r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\ct_deidentified", help="Path containing deidentified UF Health data")
@@ -92,7 +100,7 @@ parser.add_argument('--exclude_percent', required=False, default=0.3, help="Deci
 parser.add_argument('--dsize', required=False, default=7, help="Disk radius for morphological closing")
 parser.add_argument('--ub', required=False, default=200, help="Upperbound")
 
-
+#===================#
 
 """
 Inclusion and exclusion terms to use for filtering NCCT and CTP keywords. These keywords are used to find the folders containing NCCT and CTP data. Folder names may vary subject to subject and these terms are not perfect.
@@ -101,6 +109,7 @@ NCCT_include = {'without', 'W-O', 'NCCT', 'NON-CON', 'NON_CON'}; # Inclusion ter
 NCCT_exclude = {'bone', '0.5', 'soft_tissue', 'Untitled', 'MIP', 'Stack', 'Summary', 'CTA', 'SUB', 'Dynamic', 'Perfusion', 'Lung', 'Sft', 'Soft', 'Scanogram'}; # Exclusionary terms to serach for NCCT
 CTP_include = {'0.5','CBP' ,'4D' ,'Perfusion' ,'Dynamic'}; # Inclusionary terms to search for CTP
 CTP_exclude = {'2.0', 'MIP' ,'Untitled' ,'Stack' ,'Summary' ,'CTA' ,'SUB' ,'CTV' ,'Bone' ,'Soft' ,'Maps' ,'Body' ,'Axial' ,'Coronal' ,'Tissue' ,'Soft' ,'Sft' ,'Removed' ,'HCT' ,'Map' ,'With' ,}; # Exclusionary terms to search for CTP
+
 
 # Load the arguments
 opt = parser.parse_args()
@@ -112,11 +121,13 @@ print("\n")
 # Subject list in the directory
 subjects = os.listdir(opt.deidPath)
 
+
 """
 In the MATLAB equivalent script, matchNCCTandFSTROKE.m, there are scripts called fix_study() and fix_series() which are used here. The deidentified files on HPG and test files are already fixed so I cannot try test fixes here. Assume for now that data is fixed. Come back here to replace. Files can be found on the PHI computer.
 """
 print("-------------------------------------------")
 print("SKIPPING FIX STUDY AND SERIES...")
+
 
 # Creating folders if needed
 print("-------------------------------------------")
@@ -130,6 +141,8 @@ errorFlagPath = os.path.dirname(opt.deidPath)
 errorFlagPath = os.path.join(errorFlagPath, 'error_flags')
 create_folder(errorFlagPath)
 
+# Partition folder
+create_folder(opt.partitionPath)
 
 # Slice Matching. Skips if flag found in completed folder
 print("-------------------------------------------")
@@ -224,6 +237,7 @@ with tqdm(total=len(subjects), desc='Processing Subjects') as pbar:
                 CTP_zcoords[z_coord] = i+1
         except:
             create_error_file(flagFile,errorFlagPath,subject,'Issue with CTP coordinates')
+            continue
             
         # Convert the z-coord keys into a usable matrix using list then array fx.
         NCCT_zs = list(NCCT_zcoords.keys())
@@ -232,6 +246,14 @@ with tqdm(total=len(subjects), desc='Processing Subjects') as pbar:
         NCCT_zs_sorted = sorted(NCCT_zs)
         CTP_zs = np.array(CTP_zs)
         slice_num = 1
+        
+        # If no coordinates are found for either CTP or NCCT, throw an error
+        if CTP_zs.size == 0:
+            create_error_file(flagFile,errorFlagPath,subject,'CTP zero size array')
+            continue
+        elif NCCT_zs.size == 0:
+            create_error_file(flagFile,errorFlagPath,subject,'NCCT zero size array')
+            continue
         
         """
         Given a list of coordinates for the NCCT and CTP slices, we start slice
@@ -262,8 +284,11 @@ with tqdm(total=len(subjects), desc='Processing Subjects') as pbar:
             # Grab TWO offset NCCT slices
             # !- NCCT slices are sometimes so far apart we just grab the above and below slice.
             idx = NCCT_zs_sorted.index(NCCT_z)
-            above = NCCT_zs_sorted[idx+1]
-            below = NCCT_zs_sorted[idx-1]
+            try:
+                above = NCCT_zs_sorted[idx+1]
+                below = NCCT_zs_sorted[idx-1]
+            except:
+                continue
             
             # Get images using the z-coordinates. Access from zcoord dictionary
             NCCT_img_base_path = NCCT_zcoords[NCCT_z]
