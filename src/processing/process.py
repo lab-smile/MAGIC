@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+===============================================================================
 @author: kylebsee
 
 Match NCCT and FSTROKE output slices.
@@ -66,7 +67,7 @@ What your data should look like (exact wording may vary):
 100211_62
 100211_66
 ...
-
+===============================================================================
 """
 
 # Import libraries
@@ -78,6 +79,8 @@ import matplotlib.pyplot as plt
 import pydicom
 import cv2
 from tqdm import tqdm
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, as_completed
 #import time
 
 parser = argparse.ArgumentParser()
@@ -87,9 +90,9 @@ parser = argparse.ArgumentParser()
 #===================#
 
 # Required paths
-parser.add_argument('--deidPath', required=False, default=r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\ct_deidentified", help="Path containing deidentified UF Health data")
-parser.add_argument('--fstrokePath', required=False, default=r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\fstroke_output", help="Path containing the fstroke output. Relates to the deidentified data")
-parser.add_argument('--partitionPath', required=False, default=r"C:\Users\kylebsee\Dropbox (UFL)\Quick Coding Scripts\fstroke\partition_py", help="Path to contain image montage outputs")
+parser.add_argument('--deidPath', required=False, default=r"D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\fstroke\ct_deidentified", help="Path containing deidentified UF Health data")
+parser.add_argument('--fstrokePath', required=False, default=r"D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\fstroke\fstroke_output", help="Path containing the fstroke output. Relates to the deidentified data")
+parser.add_argument('--partitionPath', required=False, default=r"D:\Desktop Files\Dropbox (UFL)\Quick Coding Scripts\fstroke\partition_py", help="Path to contain image montage outputs")
 
 """
 Above: Requires input folders.
@@ -144,221 +147,241 @@ create_folder(errorFlagPath)
 # Partition folder
 create_folder(opt.partitionPath)
 
+    
+def process_slice(jj, NCCT_zs, NCCT_zcoords, NCCT_zs_sorted, opt):
+    
+    # Grab ONE NCCT z-coordinate
+    NCCT_z = NCCT_zs[jj]
+    
+    # Grab ONE corresponding CTP z-coordinate
+    # !- Pass if we cannot find a corresponding CTP slice
+    CTP_abs_value = np.min(np.abs(CTP_zs-NCCT_z)) # Find the value of the smallest absolute difference
+    CTP_abs_index = np.argmin(np.abs(CTP_zs-NCCT_z)) # Find the index of the smallest absolute difference
+    if CTP_abs_value >= opt.match_threshold: # Next slice if we cannot find a corresponding CTP coordinate
+        return
+    CTP_z = CTP_zs[CTP_abs_index]
+    correspondingCTPnumber = CTP_zcoords[CTP_z]
+    
+    # Grab TWO offset NCCT slices
+    # !- NCCT slices are sometimes so far apart we just grab the above and below slice.
+    idx = NCCT_zs_sorted.index(NCCT_z)
+    try:
+        above = NCCT_zs_sorted[idx+1]
+        below = NCCT_zs_sorted[idx-1]
+    except:
+        return
+    
+    # Get images using the z-coordinates. Access from zcoord dictionary
+    NCCT_img_base_path = NCCT_zcoords[NCCT_z]
+    NCCT_img_base = process_NCCT(NCCT_img_base_path, opt.ub, opt.dsize)
+    
+    # If <20% of the image is non-zero, skip slice
+    if np.count_nonzero(NCCT_img_base) / NCCT_img_base.size < 0.2:
+        return
+    
+    # Process offset slices if base slice is informative
+    NCCT_img_above_path = NCCT_zcoords[above]
+    NCCT_img_above = process_NCCT(NCCT_img_above_path, opt.ub, opt.dsize)
+    NCCT_img_below_path = NCCT_zcoords[below]
+    NCCT_img_below = process_NCCT(NCCT_img_below_path, opt.ub, opt.dsize)
+    
+    # Clean brain slice to create mask
+    binary_mask = NCCT_img_base != 0
+    kernel = np.ones((3, 3), np.uint8)
+    opening = cv2.morphologyEx(binary_mask.astype(np.uint8), cv2.MORPH_OPEN, kernel, iterations=4)
+    mask = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel, iterations=2)
+    
+    # Find contours in the cleaned mask
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Create an empty mask to draw the brain region
+    brain_mask = np.zeros_like(mask)
+    
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        cv2.drawContours(brain_mask, [largest_contour], 0, 255, thickness=cv2.FILLED)
+    
+    # Use dilation to refine the mask
+    dilation_kernel = np.ones((3, 3), np.uint8)
+    brain_mask = cv2.dilate(brain_mask, dilation_kernel, iterations=5)
+    
+    # Use erosion to remove skull
+    erosion_kernel = np.ones((3, 3), np.uint8)
+    brain_mask = cv2.erode(brain_mask, erosion_kernel, iterations=5)
+    
+    # Apply base slice mask to offset slices and base slice
+    NCCT_img_base[~brain_mask.astype(bool)] = 0
+    NCCT_img_above[~brain_mask.astype(bool)] = 0
+    NCCT_img_below[~brain_mask.astype(bool)] = 0
+    
+    # Concatenate base and offset slices to create pseudo-3D image
+    NCCT_img = np.stack([NCCT_img_below, NCCT_img_base, NCCT_img_above], axis=2)
+    NCCT_img = np.interp(NCCT_img, (np.min(NCCT_img), np.max(NCCT_img)), [0,1])
+    
+    try:
+        # Process CTP images
+        MTT_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'mtt')
+        TTP_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'ttp')
+        CBF_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'cbf')
+        CBV_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'cbv')
+        
+        # Apply NCCT mask for CTP images
+        MTT_img[~brain_mask.astype(bool)] = 0
+        TTP_img[~brain_mask.astype(bool)] = 0
+        CBF_img[~brain_mask.astype(bool)] = 0
+        CBV_img[~brain_mask.astype(bool)] = 0
+    except:
+        return
+    
+    # Concatenate NCCT and all CTP slices
+    final_img = np.hstack([NCCT_img, MTT_img, TTP_img, CBF_img, CBV_img])
+    #plt.imshow(final_img)
+    #plt.show()
+    filename = os.path.join(opt.partitionPath,subject+'_'+str(jj)+'.png')
+    plt.imsave(filename,final_img)
+
 # Slice Matching. Skips if flag found in completed folder
 print("-------------------------------------------")
 print("BEGIN SLICE MATCHING...")
 subjects = [item for item in subjects if item != 'completed']
-with tqdm(total=len(subjects), desc='Processing Subjects') as pbar:
-    for subject in subjects:
+for subject in subjects:
+    
+    # Initialize variable each subject
+    NCCT_zcoords = {}
+    CTP_zcoords = {}
+    
+    # Continue if subject is already completed, indicated by flag
+    flagFile = os.path.join(flagPath, f"{subject}.txt")
+    if os.path.exists(flagFile):
+        print(f"> Skipping {subject} - Flag found")
+        continue
         
-        pbar.update(1)
+    
+    # List the series folder names
+    subjPath = os.path.join(opt.deidPath, subject)
+    studies = os.listdir(subjPath)
+    for folder in studies:
+        studyPath = os.path.join(subjPath, folder)
+        if os.path.isdir(studyPath):
+            series = os.listdir(studyPath)
+            break
         
-        # Initialize variable each subject
-        NCCT_zcoords = {}
-        CTP_zcoords = {}
-        
-        # Continue if subject is already completed, indicated by flag
-        flagFile = os.path.join(flagPath, f"{subject}.txt")
-        if os.path.exists(flagFile):
-            print(f"> Skipping {subject} - Flag found")
+    # Inclusion/Exclusion criteria for NCCT and CTP
+    series_NCCT = [name for name in series if not any(term.lower() in name.lower() for term in NCCT_exclude)]
+    series_NCCT = [name for name in series_NCCT if any(term.lower() in name.lower() for term in NCCT_include)]
+    series_CTP = [name for name in series if not any(term.lower() in name.lower() for term in CTP_exclude)]
+    series_CTP = [name for name in series_CTP if any(term.lower() in name.lower() for term in CTP_include)]
+    
+    # Grab NCCT files if they exist
+    if len(series_NCCT) == 1:
+        NCCT_files = glob.glob(os.path.join(studyPath, series_NCCT[0],'*.dcm'))
+    else: # No series found or multiple series found. Throw a flag
+        if not series_NCCT:
+            create_error_file(flagFile,errorFlagPath,subject,'Missing NCCT')
             continue
-            
-        
-        # List the series folder names
-        subjPath = os.path.join(opt.deidPath, subject)
-        studies = os.listdir(subjPath)
-        for folder in studies:
-            studyPath = os.path.join(subjPath, folder)
-            if os.path.isdir(studyPath):
-                series = os.listdir(studyPath)
-                break
-            
-        # Inclusion/Exclusion criteria for NCCT and CTP
-        series_NCCT = [name for name in series if not any(term.lower() in name.lower() for term in NCCT_exclude)]
-        series_NCCT = [name for name in series_NCCT if any(term.lower() in name.lower() for term in NCCT_include)]
-        series_CTP = [name for name in series if not any(term.lower() in name.lower() for term in CTP_exclude)]
-        series_CTP = [name for name in series_CTP if any(term.lower() in name.lower() for term in CTP_include)]
-        
-        # Grab NCCT files if they exist
-        if len(series_NCCT) == 1:
-            NCCT_files = glob.glob(os.path.join(studyPath, series_NCCT[0],'*.dcm'))
-        else: # No series found or multiple series found. Throw a flag
-            if not series_NCCT:
-                create_error_file(flagFile,errorFlagPath,subject,'Missing NCCT')
-                continue
-            else:
-                create_error_file(flagFile,errorFlagPath,subject,'More than one NCCT series found')
-                continue
-        
-        # Grab any file from the CTP series. It doesn't matter which CTP we grab so we grab the file with the largest byte size. CTP files generally have 50-65MB, which is the most bytes any file in this study has.
-        if len(series_CTP) == 1:
-            try:
-                CTP_files = glob.glob(os.path.join(studyPath, series_CTP[0],'*.dcm'))
-                maxFilePath = max(CTP_files, key=os.path.getsize)
-                CTP_file = pydicom.dcmread(maxFilePath)
-            except:
-                create_error_file(flagFile,errorFlagPath,subject,'Error loading CTP')
-                continue
-        else: # No series found or multiple series found. Throw a flag
-            if not series_CTP:
-                create_error_file(flagFile,errorFlagPath,subject,'Missing CTP')
-                continue
-            else:
-                create_error_file(flagFile,errorFlagPath,subject,'More than one CTP series found')
-                continue
-        
-        """
-        The image position patient metadata is saved differently in NCCT and CTP.
-        Each NCCT slice contains its unique slice coordinates found in
-        "ImagePositionPatient" metadata. Each CTP slice contains all slice coordinates
-        for every slice. This is found in "PerFrameFunctionalGroupSequence". Since
-        CTP is 0.5mm resolution it has 320 items in this metadata corresponding to
-        each CTP slice. Further, the coordinates are found in "PlanePositionSequnece"
-        then "ImagePositionPatient"
-        
-        We use a for loop to iterate through each slice for NCCT and each item in
-        "PerFrameFunctionalGroupSequence" for the CTP slice.
-        """
-        
-        # Grab all of the z-coordinates from NCCT
-        try:
-            for NCCT_file in NCCT_files:
-                NCCT = pydicom.dcmread(NCCT_file)
-                z_coord = NCCT.ImagePositionPatient[2] # X Y Z format
-                NCCT_zcoords[z_coord] = NCCT_file
-        except:
-            create_error_file(flagFile,errorFlagPath,subject,'Issue with NCCT coordinates')
-            continue
-        
-        # Grab all of the z-coordinates from CTP (hidden deep within metadata)
-        try:
-            for i in range(len(CTP_file.PerFrameFunctionalGroupsSequence)):
-                z_coord = CTP_file.PerFrameFunctionalGroupsSequence[i].PlanePositionSequence[0].ImagePositionPatient[2]
-                CTP_zcoords[z_coord] = i+1
-        except:
-            create_error_file(flagFile,errorFlagPath,subject,'Issue with CTP coordinates')
-            continue
-            
-        # Convert the z-coord keys into a usable matrix using list then array fx.
-        NCCT_zs = list(NCCT_zcoords.keys())
-        CTP_zs = list(CTP_zcoords.keys())
-        NCCT_zs = np.array(NCCT_zs)
-        NCCT_zs_sorted = sorted(NCCT_zs)
-        CTP_zs = np.array(CTP_zs)
-        slice_num = 1
-        
-        # If no coordinates are found for either CTP or NCCT, throw an error
-        if CTP_zs.size == 0:
-            create_error_file(flagFile,errorFlagPath,subject,'CTP zero size array')
-            continue
-        elif NCCT_zs.size == 0:
-            create_error_file(flagFile,errorFlagPath,subject,'NCCT zero size array')
-            continue
-        
-        """
-        Given a list of coordinates for the NCCT and CTP slices, we start slice
-        matching NCCT and CTP. We exclude the first and last N slices from exclude
-        slice variable. Each NCCT slice in the non-RAPID data have large deviations
-        from each slice (5-15mm gap) so we process every non-excluded slice.
-        """
-        # More than 100 slices, save every 5 slices. Otherwise, expect ~10-30.
-        if len(NCCT_zcoords) > 100:
-            step_size = 4
         else:
-            step_size = 1
-        cutoff = round(len(NCCT_zcoords)*opt.exclude_percent)
-        for jj in range(cutoff, len(NCCT_zcoords)-cutoff, step_size):
-            
-            # Grab ONE NCCT z-coordinate
-            NCCT_z = NCCT_zs[jj]
-            
-            # Grab ONE corresponding CTP z-coordinate
-            # !- Pass if we cannot find a corresponding CTP slice
-            CTP_abs_value = np.min(np.abs(CTP_zs-NCCT_z)) # Find the value of the smallest absolute difference
-            CTP_abs_index = np.argmin(np.abs(CTP_zs-NCCT_z)) # Find the index of the smallest absolute difference
-            if CTP_abs_value >= opt.match_threshold: # Next slice if we cannot find a corresponding CTP coordinate
-                continue
-            CTP_z = CTP_zs[CTP_abs_index]
-            correspondingCTPnumber = CTP_zcoords[CTP_z]
-            
-            # Grab TWO offset NCCT slices
-            # !- NCCT slices are sometimes so far apart we just grab the above and below slice.
-            idx = NCCT_zs_sorted.index(NCCT_z)
-            try:
-                above = NCCT_zs_sorted[idx+1]
-                below = NCCT_zs_sorted[idx-1]
-            except:
-                continue
-            
-            # Get images using the z-coordinates. Access from zcoord dictionary
-            NCCT_img_base_path = NCCT_zcoords[NCCT_z]
-            NCCT_img_base = process_NCCT(NCCT_img_base_path, opt.ub, opt.dsize)
-            
-            # If <20% of the image is non-zero, skip slice
-            if np.count_nonzero(NCCT_img_base) / NCCT_img_base.size < 0.2:
-                continue
-            
-            # Process offset slices if base slice is informative
-            NCCT_img_above_path = NCCT_zcoords[above]
-            NCCT_img_above = process_NCCT(NCCT_img_above_path, opt.ub, opt.dsize)
-            NCCT_img_below_path = NCCT_zcoords[below]
-            NCCT_img_below = process_NCCT(NCCT_img_below_path, opt.ub, opt.dsize)
-            
-            # Clean brain slice to create mask
-            binary_mask = NCCT_img_base != 0
-            kernel = np.ones((3, 3), np.uint8)
-            opening = cv2.morphologyEx(binary_mask.astype(np.uint8), cv2.MORPH_OPEN, kernel, iterations=4)
-            mask = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel, iterations=2)
-            
-            # Find contours in the cleaned mask
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            # Create an empty mask to draw the brain region
-            brain_mask = np.zeros_like(mask)
-            
-            if contours:
-                largest_contour = max(contours, key=cv2.contourArea)
-                cv2.drawContours(brain_mask, [largest_contour], 0, 255, thickness=cv2.FILLED)
-            
-            # Use dilation to refine the mask
-            dilation_kernel = np.ones((3, 3), np.uint8)
-            brain_mask = cv2.dilate(brain_mask, dilation_kernel, iterations=5)
-            
-            # Use erosion to remove skull
-            erosion_kernel = np.ones((3, 3), np.uint8)
-            brain_mask = cv2.erode(brain_mask, erosion_kernel, iterations=5)
-            
-            # Apply base slice mask to offset slices and base slice
-            NCCT_img_base[~brain_mask.astype(bool)] = 0
-            NCCT_img_above[~brain_mask.astype(bool)] = 0
-            NCCT_img_below[~brain_mask.astype(bool)] = 0
-            
-            # Concatenate base and offset slices to create pseudo-3D image
-            NCCT_img = np.stack([NCCT_img_below, NCCT_img_base, NCCT_img_above], axis=2)
-            NCCT_img = np.interp(NCCT_img, (np.min(NCCT_img), np.max(NCCT_img)), [0,1])
-            
-            try:
-                # Process CTP images
-                MTT_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'mtt')
-                TTP_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'ttp')
-                CBF_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'cbf')
-                CBV_img = process_CTP(opt.fstrokePath, subject, correspondingCTPnumber, mask, 'cbv')
-                
-                # Apply NCCT mask for CTP images
-                MTT_img[~brain_mask.astype(bool)] = 0
-                TTP_img[~brain_mask.astype(bool)] = 0
-                CBF_img[~brain_mask.astype(bool)] = 0
-                CBV_img[~brain_mask.astype(bool)] = 0
-            except:
-                continue
-            
-            # Concatenate NCCT and all CTP slices
-            final_img = np.hstack([NCCT_img, MTT_img, TTP_img, CBF_img, CBV_img])
-            #plt.imshow(final_img)
-            #plt.show()
-            filename = os.path.join(opt.partitionPath,subject+'_'+str(jj)+'.png')
-            plt.imsave(filename,final_img)
+            create_error_file(flagFile,errorFlagPath,subject,'More than one NCCT series found')
+            continue
+    
+    # Grab any file from the CTP series. It doesn't matter which CTP we grab so we grab the file with the largest byte size. CTP files generally have 50-65MB, which is the most bytes any file in this study has.
+    if len(series_CTP) == 1:
+        try:
+            CTP_files = glob.glob(os.path.join(studyPath, series_CTP[0],'*.dcm'))
+            maxFilePath = max(CTP_files, key=os.path.getsize)
+            CTP_file = pydicom.dcmread(maxFilePath)
+        except:
+            create_error_file(flagFile,errorFlagPath,subject,'Error loading CTP')
+            continue
+    else: # No series found or multiple series found. Throw a flag
+        if not series_CTP:
+            create_error_file(flagFile,errorFlagPath,subject,'Missing CTP')
+            continue
+        else:
+            create_error_file(flagFile,errorFlagPath,subject,'More than one CTP series found')
+            continue
+    
+    """
+    The image position patient metadata is saved differently in NCCT and CTP.
+    Each NCCT slice contains its unique slice coordinates found in
+    "ImagePositionPatient" metadata. Each CTP slice contains all slice coordinates
+    for every slice. This is found in "PerFrameFunctionalGroupSequence". Since
+    CTP is 0.5mm resolution it has 320 items in this metadata corresponding to
+    each CTP slice. Further, the coordinates are found in "PlanePositionSequnece"
+    then "ImagePositionPatient"
+    
+    We use a for loop to iterate through each slice for NCCT and each item in
+    "PerFrameFunctionalGroupSequence" for the CTP slice.
+    """
+    
+    # Grab all of the z-coordinates from NCCT
+    try:
+        for NCCT_file in NCCT_files:
+            NCCT = pydicom.dcmread(NCCT_file)
+            z_coord = NCCT.ImagePositionPatient[2] # X Y Z format
+            NCCT_zcoords[z_coord] = NCCT_file
+    except:
+        create_error_file(flagFile,errorFlagPath,subject,'Issue with NCCT coordinates')
+        continue
+    
+    # Grab all of the z-coordinates from CTP (hidden deep within metadata)
+    try:
+        for i in range(len(CTP_file.PerFrameFunctionalGroupsSequence)):
+            z_coord = CTP_file.PerFrameFunctionalGroupsSequence[i].PlanePositionSequence[0].ImagePositionPatient[2]
+            CTP_zcoords[z_coord] = i+1
+    except:
+        create_error_file(flagFile,errorFlagPath,subject,'Issue with CTP coordinates')
+        continue
         
+    # Convert the z-coord keys into a usable matrix using list then array fx.
+    NCCT_zs = list(NCCT_zcoords.keys())
+    CTP_zs = list(CTP_zcoords.keys())
+    NCCT_zs = np.array(NCCT_zs)
+    NCCT_zs_sorted = sorted(NCCT_zs)
+    CTP_zs = np.array(CTP_zs)
+    slice_num = 1
+    
+    # If no coordinates are found for either CTP or NCCT, throw an error
+    if CTP_zs.size == 0:
+        create_error_file(flagFile,errorFlagPath,subject,'CTP zero size array')
+        continue
+    elif NCCT_zs.size == 0:
+        create_error_file(flagFile,errorFlagPath,subject,'NCCT zero size array')
+        continue
+    
+    """
+    Given a list of coordinates for the NCCT and CTP slices, we start slice
+    matching NCCT and CTP. We exclude the first and last N slices from exclude
+    slice variable. Each NCCT slice in the non-RAPID data have large deviations
+    from each slice (5-15mm gap) so we process every non-excluded slice.
+    """
+    # More than 100 slices, save every 5 slices. Otherwise, expect ~10-30.
+    if len(NCCT_zcoords) > 100:
+        step_size = 4
+    else:
+        step_size = 1
+    cutoff = round(len(NCCT_zcoords)*opt.exclude_percent)
+    
+    #for jj in range(cutoff, len(NCCT_zcoords)-cutoff, step_size):
+        
+    num_iterations = range(cutoff, len(NCCT_zcoords) - cutoff, step_size)
+    total_iterations = len(num_iterations)
+    
+    # Use ThreadPoolExecutor for parallel processing
+    with ThreadPoolExecutor() as executor:
+        # Submit jobs to the executor
+        futures = [executor.submit(process_slice, jj, NCCT_zs, NCCT_zcoords, NCCT_zs_sorted, opt)
+                   for jj in num_iterations]
+
+        # Use as_completed to iterate over completed futures
+        with tqdm(total=len(futures), desc=f"Processing slices for {subject}") as pbar:
+            for future in as_completed(futures):
+                pbar.update(1)
+
+    # Create the flag file after completion
+    with open(flagFile, 'w'):
+        pass  # 'pass' is a no-op statement, creating an empty block
+    
+    
         
 print("-------------------------------------------")
 print("COMPLETED")
